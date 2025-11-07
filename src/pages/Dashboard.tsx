@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MapPin, Briefcase, Calendar, Bell, LogOut, User, Search } from "lucide-react";
+import { MapPin, Briefcase, Calendar, Bell, LogOut, User, Search, Map as MapIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
+import Map from "@/components/Map";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -112,7 +113,7 @@ const Dashboard = () => {
               </div>
               <div>
                 <h1 className="text-xl font-bold">ProxiLink</h1>
-                <p className="text-sm text-muted-foreground">Youth Dashboard</p>
+                <p className="text-sm text-muted-foreground">User Dashboard</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -177,7 +178,7 @@ const Dashboard = () => {
 
         {/* Tabs for Services and Events */}
         <Tabs defaultValue="services" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 max-w-md">
+          <TabsList className="grid w-full grid-cols-3 max-w-2xl">
             <TabsTrigger value="services">
               <Briefcase className="h-4 w-4 mr-2" />
               Jobs & Services
@@ -185,6 +186,10 @@ const Dashboard = () => {
             <TabsTrigger value="events">
               <Calendar className="h-4 w-4 mr-2" />
               Events
+            </TabsTrigger>
+            <TabsTrigger value="map">
+              <MapIcon className="h-4 w-4 mr-2" />
+              Map View
             </TabsTrigger>
           </TabsList>
 
@@ -265,6 +270,19 @@ const Dashboard = () => {
                 ))}
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="map" className="space-y-4">
+            <div className="mb-4">
+              <h3 className="text-2xl font-semibold mb-2">Explore Opportunities Around You</h3>
+              <p className="text-muted-foreground">Interactive map showing nearby services and events</p>
+            </div>
+            <Map 
+              userLocation={profile?.location_lat && profile?.location_lng ? {
+                lat: Number(profile.location_lat),
+                lng: Number(profile.location_lng)
+              } : undefined} 
+            />
           </TabsContent>
         </Tabs>
       </main>
