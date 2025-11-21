@@ -50,6 +50,10 @@
 - [ ] Notification system
 - [ ] Admin moderation tools
 ### Sprint 4: Community Features (Week 4)
+- [ ] User connections/messaging (IN-PROGRESS: Messaging UI development started — frontend demo fallbacks implemented)
+- [x] Notification system
+- [ ] Admin moderation tools
+### Sprint 4: Community Features (Week 4)
 - [ ] Event creation (NGOs)
 - [ ] Event discovery
 - [ ] User connections/messaging
@@ -68,6 +72,13 @@
   - ⏳ Edge Function for push delivery (TODO: Next phase)
   - ⏳ Database triggers for push delivery (TODO: Next phase)
 - [ ] Admin moderation tools---
+
+Today's prioritized plan (Nov 21, 2025):
+- **1. Build Messaging UI (In-Progress)** — implement conversation list, message view, send flow; demo fallbacks added so UI can be developed without DB migrations applied.
+- **2. Complete User Authentication** — ensure signup/login, session persistence and profile creation are stable and tested.
+- **3. Deploy** — apply DB migrations, deploy Edge Functions (push delivery), set VAPID secrets, then perform end-to-end validation.
+
+Note: The tracker will be updated after each completed sub-step. Messaging UI work is the active focus for today.
 
 ## Known Issues & TODOs
 
@@ -135,9 +146,10 @@
 - User-owned RLS policies
 - JSONB subscription storage
 - ⏳ Awaiting application to Supabase database
+- Messaging migration file created (20251117120000_create_messaging_tables.sql) — migration SQL present in `supabase/migrations/` but not yet applied to Supabase (pending).
 
 ⏳ Pending:
-- Messaging/chat tables (for vendor-user communication)
+- Messaging/chat tables (for vendor-user communication) — migration file exists, needs to be applied to project.
 - Transaction history (for payments)
 - Analytics tables (for dashboards)
 
@@ -290,5 +302,13 @@
 
 ---
 
-**Last Updated:** November 13, 2025 - 14:30 UTC
-**Status:** Sprint 4 Push Notifications infrastructure complete; UI integration done; awaiting VAPID key setup and Edge Function deployment
+**Last Updated:** November 21, 2025 - 12:00 UTC
+**Status:** Sprint 4 active; Messaging UI polishing in-progress; migrations pending apply
+
+Recent updates (Nov 21, 2025):
+- Google Maps migration completed and Content-Security-Policy updated for dev server (vite.config.ts).
+- Realtime subscriptions updated to Supabase v2 channel API (`src/hooks/useNotifications.tsx`).
+- Messaging UI: demo-mode fully functional; optimistic-send, retry-on-failure, accessibility labels, and sending spinner added to `src/pages/Messages.tsx`.
+- Unit tests for messaging + notifications passing locally (Vitest + jsdom). Migration file for messaging exists at `supabase/migrations/20251117120000_create_messaging_tables.sql` but has not been applied to the Supabase project (pending).
+- Supabase CLI could not be installed in this environment; recommended options: use Supabase Dashboard SQL editor, winget installer on Windows, or Docker-based CLI container.
+ - Messaging: mark-as-read UX added — opening a conversation marks messages read in the UI and attempts to persist read-state; incoming messages for the open conversation are marked read optimistically and conversation `unread_count` is cleared.

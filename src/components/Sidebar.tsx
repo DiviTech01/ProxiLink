@@ -1,7 +1,7 @@
 import React from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { List, User, CreditCard, Bell, HelpCircle, FileText, Settings } from 'lucide-react';
+import { List, User, CreditCard, Bell, HelpCircle, FileText, Settings, MessageSquare } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Sidebar: React.FC = () => {
@@ -41,6 +41,11 @@ const Sidebar: React.FC = () => {
           <Link to="/notifications" className="flex items-center gap-3 px-3 py-2 hover:bg-muted rounded">
             <Bell className="h-5 w-5" />
             <span>Notifications</span>
+          </Link>
+
+          <Link to="/messages" className="flex items-center gap-3 px-3 py-2 hover:bg-muted rounded">
+            <MessageSquare className="h-5 w-5" />
+            <span>Messages</span>
           </Link>
 
           <Link to="/about" className="flex items-center gap-3 px-3 py-2 hover:bg-muted rounded">

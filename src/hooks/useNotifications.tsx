@@ -114,26 +114,32 @@ export function useNotifications() {
 
         await fetchNotifications();
 
+        // Use Supabase v2 Realtime `channel` API to subscribe to notifications for the user
         const channel = supabase
-          .from(`notifications:user_id=eq.${userId}`)
-          .on('INSERT', (payload: { new?: unknown }) => {
-            const newRow = payload.new as NotificationRow;
-            if (!mounted || !newRow) return;
-            setNotifications((prev) => [newRow, ...prev]);
-            toast(`${newRow.title}${newRow.content ? ` — ${newRow.content}` : ''}`);
-          })
+          .channel(`notifications:${userId}`)
+          .on(
+            'postgres_changes',
+            { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },
+            (payload: any) => {
+              const newRow = payload.new as NotificationRow;
+              if (!mounted || !newRow) return;
+              setNotifications((prev) => [newRow, ...prev]);
+              toast(`${newRow.title}${newRow.content ? ` — ${newRow.content}` : ''}`);
+            }
+          )
           .subscribe();
 
         cleanupFn = () => {
           mounted = false;
           try {
-            const ch = channel as unknown as { unsubscribe?: () => void };
-            if (ch.unsubscribe) {
-              ch.unsubscribe();
-            } else {
-              const s = supabase as unknown as { removeSubscription?: (c: unknown) => void; removeChannel?: (c: unknown) => void };
-              if (s.removeSubscription) s.removeSubscription(channel);
-              else if (s.removeChannel) s.removeChannel(channel);
+            // supabase.removeChannel is the correct way to remove v2 channels
+            if (typeof supabase.removeChannel === 'function') {
+              // removeChannel may be async; call it but don't await in cleanup
+              // @ts-ignore
+              supabase.removeChannel(channel);
+            } else if (typeof channel?.unsubscribe === 'function') {
+              // fallback for older client implementations
+              channel.unsubscribe();
             }
           } catch (e) {
             console.warn('Failed to unsubscribe from notifications channel', e);
