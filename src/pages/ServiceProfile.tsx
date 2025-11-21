@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Phone, MapPin, Star, Calendar } from "lucide-react";
+import { ArrowLeft, Phone, MapPin, Star, Calendar, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import ReviewForm from '@/components/ReviewForm';
 
@@ -35,6 +35,56 @@ const ServiceProfile = () => {
   const [service, setService] = useState<Service | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
+  const [vendorId, setVendorId] = useState<string | null>(null);
+
+  const startConversation = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('Please log in to message vendors');
+        navigate('/login');
+        return;
+      }
+
+      if (!vendorId) {
+        toast.error('Vendor information not available');
+        return;
+      }
+
+      // Check if conversation already exists
+      const { data: existingConv } = await supabase
+        .from('conversations' as any)
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('vendor_id', vendorId)
+        .single();
+
+      if (existingConv) {
+        // Navigate to existing conversation
+        navigate('/messages');
+        return;
+      }
+
+      // Create new conversation
+      const { data: newConv, error } = await supabase
+        .from('conversations' as any)
+        .insert({
+          user_id: user.id,
+          vendor_id: vendorId,
+          service_id: id,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast.success('Conversation started!');
+      navigate('/messages');
+    } catch (error) {
+      console.error('Error starting conversation:', error);
+      toast.error('Failed to start conversation');
+    }
+  };
 
   const fetchServiceDetails = useCallback(async () => {
     const useDemo = import.meta.env.VITE_USE_DEMO_VENDORS === 'true';
@@ -43,6 +93,7 @@ const ServiceProfile = () => {
       if (demo) {
         type Vendor = { id?: string; business_name?: string; profiles?: { full_name?: string } };
         const vendor = (demoVendors.find((v: unknown) => (v as unknown as { id?: string }).id === (demo as unknown as { vendor_id?: string }).vendor_id) || ({} as Vendor)) as Vendor;
+        setVendorId((demo as unknown as { vendor_id?: string }).vendor_id || null);
         setService({
           ...(demo as unknown as Service),
           vendor_profiles: { business_name: vendor.business_name },
@@ -67,6 +118,7 @@ const ServiceProfile = () => {
       navigate("/dashboard");
     } else {
       setService(data);
+      setVendorId((data as any).vendor_id || null);
     }
     setLoading(false);
   }, [id, navigate]);
@@ -162,8 +214,12 @@ const ServiceProfile = () => {
         </Card>
 
         {/* Action Buttons */}
-        <div className="grid grid-cols-2 gap-3">
-          <Button size="lg" className="w-full">
+        <div className="grid grid-cols-3 gap-3">
+          <Button size="lg" className="w-full" onClick={startConversation}>
+            <MessageSquare className="h-5 w-5 mr-2" />
+            Message
+          </Button>
+          <Button size="lg" variant="outline" className="w-full">
             <Phone className="h-5 w-5 mr-2" />
             Call
           </Button>

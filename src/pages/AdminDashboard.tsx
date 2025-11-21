@@ -77,59 +77,6 @@ const AdminDashboard = () => {
     fetchVendors();
   }, [checkAdminAccess, fetchStats, fetchUsers, fetchVendors]);
 
-  const checkAdminAccess = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      navigate("/login");
-      return;
-    }
-
-    const { data: roles } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id);
-
-    const isAdmin = roles?.some(r => r.role === "admin");
-    if (!isAdmin) {
-      toast.error("Access denied");
-      navigate("/dashboard");
-    }
-  };
-
-  const fetchStats = async () => {
-    const [usersCount, vendorsCount, servicesCount, eventsCount] = await Promise.all([
-      supabase.from("profiles").select("*", { count: "exact", head: true }),
-      supabase.from("vendor_profiles").select("*", { count: "exact", head: true }),
-      supabase.from("services").select("*", { count: "exact", head: true }),
-      supabase.from("events").select("*", { count: "exact", head: true })
-    ]);
-
-    setStats({
-      users: usersCount.count || 0,
-      vendors: vendorsCount.count || 0,
-      services: servicesCount.count || 0,
-      events: eventsCount.count || 0
-    });
-  };
-
-  const fetchUsers = async () => {
-    const { data } = await supabase
-      .from("profiles")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(10);
-    setUsers(data || []);
-  };
-
-  const fetchVendors = async () => {
-    const { data } = await supabase
-      .from("vendor_profiles")
-      .select("*, profiles(*)")
-      .order("created_at", { ascending: false })
-      .limit(10);
-    setVendors(data || []);
-  };
-
 
   const handleLogout = async () => {
     await supabase.auth.signOut();

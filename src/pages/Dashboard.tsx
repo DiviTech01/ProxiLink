@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import Map from "@/components/Map";
+import MapWrapper from "@/components/MapWrapper";
 import ProfileMenu from "@/components/ProfileMenu";
 import NotificationBell from '@/components/NotificationBell';
 import Sidebar from '@/components/Sidebar';
@@ -154,7 +154,7 @@ const Dashboard = () => {
       <div className="w-full h-screen">
         {/* debug: log map render to console without returning a node */}
         {typeof window !== 'undefined' && (() => { console.log('Rendering Map container with profile location:', profile?.location_lat, profile?.location_lng); return null; })()}
-        <Map 
+        <MapWrapper 
           userLocation={profile?.location_lat && profile?.location_lng ? {
             lat: Number(profile.location_lat),
             lng: Number(profile.location_lng)
