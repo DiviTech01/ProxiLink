@@ -38,6 +38,10 @@ const ServiceProviderList = ({ services }: ServiceProviderListProps) => {
   const [selectedItem, setSelectedItem] = useState<BaseItem | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const listRef = useRef<HTMLDivElement | null>(null);
+  const sheetRef = useRef<HTMLDivElement | null>(null);
+  const touchStartY = useRef<number>(0);
+  const touchCurrentY = useRef<number>(0);
+  const isDragging = useRef<boolean>(false);
 
   const useDemo = import.meta.env.VITE_USE_DEMO_VENDORS === 'true';
 
@@ -84,6 +88,34 @@ const ServiceProviderList = ({ services }: ServiceProviderListProps) => {
     }
   };
 
+  // Touch handlers for draggable sheet
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
+    isDragging.current = true;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging.current) return;
+    touchCurrentY.current = e.touches[0].clientY;
+    const deltaY = touchStartY.current - touchCurrentY.current;
+
+    // Expand if dragging up by 50px or more
+    if (deltaY > 50 && !isExpanded) {
+      setIsExpanded(true);
+      isDragging.current = false;
+    }
+    // Collapse if dragging down by 50px or more when at top of list
+    else if (deltaY < -50 && isExpanded && listRef.current?.scrollTop === 0) {
+      setIsExpanded(false);
+      setFullyExpanded(false);
+      isDragging.current = false;
+    }
+  };
+
+  const handleTouchEnd = () => {
+    isDragging.current = false;
+  };
+
   // Expand to full screen when user scrolls to bottom of the provider list
   useEffect(() => {
     const el = listRef.current;
@@ -111,10 +143,14 @@ const ServiceProviderList = ({ services }: ServiceProviderListProps) => {
     <>
       {/* Bottom Sheet */}
       <div
+        ref={sheetRef}
         className={cn(
           "fixed bottom-0 left-0 right-0 bg-card border-t border-border rounded-t-3xl shadow-2xl transition-all duration-300 z-40 overflow-hidden pointer-events-auto",
           isExpanded ? (fullyExpanded ? "h-screen" : "h-[70vh]") : "h-[84px]"
         )}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
         {/* Drag Handle */}
         <button
@@ -123,9 +159,9 @@ const ServiceProviderList = ({ services }: ServiceProviderListProps) => {
           aria-label="Toggle nearby providers"
         />
 
-        {/* Header - clickable to expand */}
+        {/* Header - draggable to expand */}
         <div 
-          className="p-4 sm:p-6 pb-3 sm:pb-4 cursor-pointer"
+          className="p-4 sm:p-6 pb-3 sm:pb-4 cursor-pointer touch-none"
           onClick={() => !isExpanded && setIsExpanded(true)}
         >
           <div className="flex items-center justify-between">
