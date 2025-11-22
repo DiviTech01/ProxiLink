@@ -73,8 +73,9 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
       )}
     >
       <div
-        className="max-w-md mx-auto bg-gradient-to-br from-primary via-primary-glow to-secondary rounded-xl shadow-2xl pointer-events-auto transform transition-transform cursor-pointer hover:shadow-3xl"
+        className="max-w-md mx-auto rounded-xl shadow-2xl pointer-events-auto transform transition-transform cursor-pointer hover:shadow-3xl"
         style={{
+          background: 'linear-gradient(135deg, hsl(25, 95%, 53%) 0%, hsl(25, 100%, 65%) 50%, hsl(35, 100%, 50%) 100%)',
           transform: `translateY(-${swipeOffset}px)`,
         }}
         onTouchStart={handleTouchStart}
