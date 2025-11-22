@@ -37,9 +37,72 @@ export const useGeolocation = () => {
   const [autoRequested, setAutoRequested] = useState(false);
 
   /**
+   * Load cached location from localStorage
+   * Returns true if valid cached location was found and loaded
+   */
+  const loadCachedLocation = useCallback(() => {
+    try {
+      const cached = localStorage.getItem(LOCATION_CACHE_KEY);
+      if (!cached) return false;
+
+      const parsed = JSON.parse(cached);
+      const age = Date.now() - (parsed.timestamp || 0);
+
+      if (age < CACHE_DURATION) {
+        console.log('Loading cached location:', parsed);
+        setState(prev => ({
+          ...prev,
+          location: parsed,
+        }));
+        return true;
+      } else {
+        console.log('Cached location expired');
+        localStorage.removeItem(LOCATION_CACHE_KEY);
+        return false;
+      }
+    } catch (error) {
+      console.error('Error loading cached location:', error);
+      return false;
+    }
+  }, []);
+
+  /**
+   * Check location permission status
+   * Returns true if permission is granted
+   */
+  const checkPermission = useCallback(async () => {
+    try {
+      // Check localStorage cache first
+      const cachedPermission = localStorage.getItem(PERMISSION_CACHE_KEY);
+      if (cachedPermission === 'granted') {
+        setState(prev => ({ ...prev, permissionGranted: true }));
+        return true;
+      }
+      if (cachedPermission === 'denied') {
+        setState(prev => ({ ...prev, permissionGranted: false }));
+        return false;
+      }
+
+      // Check Permissions API if available
+      if ('permissions' in navigator) {
+        const result = await navigator.permissions.query({ name: 'geolocation' });
+        const granted = result.state === 'granted';
+        localStorage.setItem(PERMISSION_CACHE_KEY, granted ? 'granted' : 'denied');
+        setState(prev => ({ ...prev, permissionGranted: granted }));
+        return granted;
+      }
+
+      return false;
+    } catch (error) {
+      console.log('Permissions API not available or error:', error);
+      return false;
+    }
+  }, []);
+
+  /**
    * Request user's current location (one-time)
    */
-  const requestLocation = useCallback(() => {
+  const requestLocation = useCallback((silent = false) => {
     if (!navigator.geolocation) {
       console.error('Geolocation not supported');
       setState((prev) => ({
@@ -56,16 +119,28 @@ export const useGeolocation = () => {
       (position) => {
         const { latitude, longitude, accuracy } = position.coords;
         console.log('Location obtained:', { latitude, longitude, accuracy });
+        
+        const locationData = {
+          lat: latitude,
+          lng: longitude,
+          accuracy,
+          timestamp: Date.now(),
+        };
+
+        // Cache the location
+        try {
+          localStorage.setItem(LOCATION_CACHE_KEY, JSON.stringify(locationData));
+          localStorage.setItem(PERMISSION_CACHE_KEY, 'granted');
+        } catch (error) {
+          console.error('Error caching location:', error);
+        }
+
         setState((prev) => ({
           ...prev,
-          location: {
-            lat: latitude,
-            lng: longitude,
-            accuracy,
-            timestamp: Date.now(),
-          },
+          location: locationData,
           loading: false,
           error: null,
+          permissionGranted: true,
         }));
       },
       (error) => {
@@ -203,7 +278,7 @@ export const useGeolocation = () => {
     };
 
     autoRequest();
-  }, [autoRequested, loadCachedLocation, checkPermission, requestLocation]);
+  }, [autoRequested]);
 
   /**
    * Cleanup on unmount
