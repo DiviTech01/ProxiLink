@@ -1,6 +1,7 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { demoNotifications, incomingDemoNotifications } from '@/data/demoNotifications';
 
 export interface NotificationRow {
   id: string;
@@ -16,6 +17,8 @@ export interface NotificationRow {
 export function useNotifications() {
   const [notifications, setNotifications] = useState<NotificationRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const notificationIndexRef = useRef(0);
+  const demoTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchNotifications = useCallback(async () => {
     try {
@@ -25,78 +28,58 @@ export function useNotifications() {
         .order('created_at', { ascending: false })
         .limit(50);
 
-      // Add demo notifications if empty
+      // Add demo notifications if empty or use data from database
       const allNotifications = (data as NotificationRow[]) || [];
       if (allNotifications.length === 0) {
-        const demoNotifications: NotificationRow[] = [
-          {
-            id: 'demo-1',
-            user_id: 'demo',
-            title: '🎉 Welcome to ProxiLink!',
-            content: 'Discover nearby service providers and vendors in your area.',
-            notification_type: 'welcome',
-            is_read: false,
-            created_at: new Date(Date.now() - 5 * 60000).toISOString(),
-          },
-          {
-            id: 'demo-2',
-            user_id: 'demo',
-            title: '📍 Nearby Services Available',
-            content: 'Fresh Water Services is now available within 2km of your location.',
-            notification_type: 'proximity',
-            is_read: false,
-            created_at: new Date(Date.now() - 15 * 60000).toISOString(),
-          },
-          {
-            id: 'demo-3',
-            user_id: 'demo',
-            title: '⭐ Service Rating Updated',
-            content: 'You received a 5-star rating for your recent service.',
-            notification_type: 'rating',
-            is_read: true,
-            created_at: new Date(Date.now() - 60 * 60000).toISOString(),
-          },
-          {
-            id: 'demo-4',
-            user_id: 'demo',
-            title: '🔔 New Service Request',
-            content: 'Someone is interested in your photography services.',
-            notification_type: 'request',
-            is_read: true,
-            created_at: new Date(Date.now() - 2 * 60 * 60000).toISOString(),
-          },
-          {
-            id: 'demo-5',
-            user_id: 'demo',
-            title: '💰 Payment Received',
-            content: 'You received ₦50,000 for your recent service delivery.',
-            notification_type: 'payment',
-            is_read: true,
-            created_at: new Date(Date.now() - 24 * 60 * 60000).toISOString(),
-          },
-        ];
-        setNotifications(demoNotifications);
+        setNotifications([...demoNotifications]);
       } else {
         setNotifications(allNotifications);
       }
     } catch (err) {
       console.error('Failed to fetch notifications', err);
       // Still show demo notifications on error
-      const demoNotifications: NotificationRow[] = [
-        {
-          id: 'demo-1',
-          user_id: 'demo',
-          title: '🎉 Welcome to ProxiLink!',
-          content: 'Discover nearby service providers and vendors in your area.',
-          notification_type: 'welcome',
-          is_read: false,
-          created_at: new Date(Date.now() - 5 * 60000).toISOString(),
-        },
-      ];
-      setNotifications(demoNotifications);
+      setNotifications([...demoNotifications]);
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  // Simulate incoming demo notifications
+  const startDemoNotifications = useCallback(() => {
+    // Clear any existing timer
+    if (demoTimerRef.current) {
+      clearInterval(demoTimerRef.current);
+    }
+
+    // Generate a new notification every 30-60 seconds
+    const scheduleNextNotification = () => {
+      const delay = Math.floor(Math.random() * 30000) + 30000; // 30-60 seconds
+      
+      demoTimerRef.current = setTimeout(() => {
+        const nextNotification = incomingDemoNotifications[notificationIndexRef.current % incomingDemoNotifications.length];
+        const newNotification: NotificationRow = {
+          ...nextNotification,
+          id: `demo-incoming-${Date.now()}`,
+          created_at: new Date().toISOString(),
+        };
+
+        setNotifications((prev) => [newNotification, ...prev]);
+        toast(
+          <div className="flex flex-col">
+            <span className="font-semibold">{newNotification.title}</span>
+            <span className="text-sm text-muted-foreground">{newNotification.content}</span>
+          </div>,
+          {
+            duration: 4000,
+          }
+        );
+
+        notificationIndexRef.current += 1;
+        scheduleNextNotification(); // Schedule the next one
+      }, delay);
+    };
+
+    scheduleNextNotification();
   }, []);
 
   useEffect(() => {
@@ -106,13 +89,16 @@ export function useNotifications() {
     (async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
+        
+        await fetchNotifications();
+
         if (!session?.user) {
           setLoading(false);
+          // Start demo notifications for non-authenticated users
+          startDemoNotifications();
           return;
         }
         const userId = session.user.id;
-
-        await fetchNotifications();
 
         // Use Supabase v2 Realtime `channel` API to subscribe to notifications for the user
         const channel = supabase
@@ -124,13 +110,28 @@ export function useNotifications() {
               const newRow = payload.new as NotificationRow;
               if (!mounted || !newRow) return;
               setNotifications((prev) => [newRow, ...prev]);
-              toast(`${newRow.title}${newRow.content ? ` — ${newRow.content}` : ''}`);
+              toast(
+                <div className="flex flex-col">
+                  <span className="font-semibold">{newRow.title}</span>
+                  <span className="text-sm text-muted-foreground">{newRow.content}</span>
+                </div>,
+                {
+                  duration: 4000,
+                }
+              );
             }
           )
           .subscribe();
 
+        // Also start demo notifications for authenticated users (fallback)
+        startDemoNotifications();
+
         cleanupFn = () => {
           mounted = false;
+          if (demoTimerRef.current) {
+            clearTimeout(demoTimerRef.current);
+            demoTimerRef.current = null;
+          }
           try {
             // supabase.removeChannel is the correct way to remove v2 channels
             if (typeof supabase.removeChannel === 'function') {
@@ -148,30 +149,45 @@ export function useNotifications() {
       } catch (e) {
         console.error('useNotifications setup failed', e);
         setLoading(false);
+        // Start demo notifications on error
+        startDemoNotifications();
       }
     })();
 
     return () => {
       mounted = false;
+      if (demoTimerRef.current) {
+        clearTimeout(demoTimerRef.current);
+        demoTimerRef.current = null;
+      }
       if (typeof cleanupFn === 'function') cleanupFn();
     };
-  }, [fetchNotifications]);
+  }, [fetchNotifications, startDemoNotifications]);
 
   const markAsRead = async (id: string) => {
+    // Optimistically update UI
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, is_read: true } : n)));
+    
+    // Don't attempt database update for demo notifications
+    if (id.startsWith('demo')) {
+      return;
+    }
+
     try {
       await supabase.from('notifications').update({ is_read: true }).eq('id', id);
-      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, is_read: true } : n)));
     } catch (e) {
       console.error('Failed to mark notification read', e);
     }
   };
 
   const markAllRead = async () => {
+    // Optimistically update UI
+    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+
     try {
-      const unreadIds = notifications.filter((n) => !n.is_read).map((n) => n.id);
+      const unreadIds = notifications.filter((n) => !n.is_read && !n.id.startsWith('demo')).map((n) => n.id);
       if (unreadIds.length === 0) return;
       await supabase.from('notifications').update({ is_read: true }).in('id', unreadIds);
-      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
     } catch (e) {
       console.error('Failed to mark all read', e);
     }
