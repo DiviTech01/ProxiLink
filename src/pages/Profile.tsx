@@ -7,18 +7,28 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Save, Camera, Mail, Phone, MapPin, User } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { ArrowLeft, Save, Camera, Mail, Phone, MapPin, User, Briefcase, Store } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Profile = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [isVendor, setIsVendor] = useState(false);
+  const [vendorDialogOpen, setVendorDialogOpen] = useState(false);
+  const [creatingVendor, setCreatingVendor] = useState(false);
   const [profile, setProfile] = useState({
     full_name: '',
     email: '',
     phone: '',
     location: ''
+  });
+  const [vendorData, setVendorData] = useState({
+    business_name: '',
+    category: '',
+    description: ''
   });
   const [userId, setUserId] = useState('');
 
@@ -36,6 +46,17 @@ const Profile = () => {
 
       setUserId(user.id);
       setProfile(prev => ({ ...prev, email: user.email || '' }));
+
+      // Check if user is already a vendor
+      const { data: vendorProfile } = await supabase
+        .from('vendor_profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (vendorProfile) {
+        setIsVendor(true);
+      }
 
       const { data, error } = await supabase
         .from('profiles')
@@ -94,6 +115,52 @@ const Profile = () => {
       toast.success('Profile updated (demo mode)');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleBecomeVendor = async () => {
+    if (!vendorData.business_name || !vendorData.category) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    setCreatingVendor(true);
+    try {
+      // Create vendor profile
+      const { error: vendorError } = await supabase
+        .from('vendor_profiles')
+        .insert({
+          user_id: userId,
+          business_name: vendorData.business_name,
+          category: vendorData.category,
+          description: vendorData.description
+        });
+
+      if (vendorError) throw vendorError;
+
+      // Assign vendor role
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .insert({
+          user_id: userId,
+          role: 'vendor'
+        });
+
+      if (roleError) throw roleError;
+
+      toast.success('Vendor profile created successfully!');
+      setIsVendor(true);
+      setVendorDialogOpen(false);
+      
+      // Optionally redirect to vendor dashboard
+      setTimeout(() => {
+        navigate('/vendor/dashboard');
+      }, 1500);
+    } catch (error) {
+      console.error('Error creating vendor profile:', error);
+      toast.error('Failed to create vendor profile');
+    } finally {
+      setCreatingVendor(false);
     }
   };
 
@@ -246,6 +313,112 @@ const Profile = () => {
             </Button>
           </CardContent>
         </Card>
+
+        {/* Vendor Section */}
+        {!isVendor && (
+          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-lg sm:text-xl flex items-center gap-2">
+                <Store className="h-5 w-5 text-primary" />
+                Become a Vendor
+              </CardTitle>
+              <CardDescription className="text-sm sm:text-base">
+                Start offering your services and reach customers near you
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
+              <Dialog open={vendorDialogOpen} onOpenChange={setVendorDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="default" className="w-full min-h-[44px] text-sm sm:text-base">
+                    <Briefcase className="h-4 w-4 mr-2" />
+                    Set Up Vendor Profile
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Become a Vendor</DialogTitle>
+                    <DialogDescription>
+                      Fill in your business details to start offering services
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="business_name">Business Name *</Label>
+                      <Input
+                        id="business_name"
+                        placeholder="Your Business Name"
+                        value={vendorData.business_name}
+                        onChange={(e) => setVendorData({ ...vendorData, business_name: e.target.value })}
+                        className="min-h-[44px]"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="category">Category *</Label>
+                      <Input
+                        id="category"
+                        placeholder="e.g., Plumbing, Food, Tech"
+                        value={vendorData.category}
+                        onChange={(e) => setVendorData({ ...vendorData, category: e.target.value })}
+                        className="min-h-[44px]"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="description">Description</Label>
+                      <Textarea
+                        id="description"
+                        placeholder="Tell customers about your business..."
+                        value={vendorData.description}
+                        onChange={(e) => setVendorData({ ...vendorData, description: e.target.value })}
+                        rows={4}
+                      />
+                    </div>
+                    <Button
+                      onClick={handleBecomeVendor}
+                      disabled={creatingVendor}
+                      className="w-full min-h-[44px]"
+                    >
+                      {creatingVendor ? (
+                        <>
+                          <svg className="animate-spin h-4 w-4 mr-2" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                          </svg>
+                          Creating...
+                        </>
+                      ) : (
+                        'Create Vendor Profile'
+                      )}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </CardContent>
+          </Card>
+        )}
+
+        {isVendor && (
+          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-lg sm:text-xl flex items-center gap-2">
+                <Store className="h-5 w-5 text-primary" />
+                Vendor Profile
+              </CardTitle>
+              <CardDescription className="text-sm sm:text-base">
+                You're registered as a vendor
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
+              <Button
+                variant="default"
+                onClick={() => navigate('/vendor/dashboard')}
+                className="w-full min-h-[44px] text-sm sm:text-base"
+              >
+                <Briefcase className="h-4 w-4 mr-2" />
+                Go to Vendor Dashboard
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Account Actions */}
         <Card>

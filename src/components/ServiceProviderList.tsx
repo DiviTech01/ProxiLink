@@ -29,10 +29,9 @@ type BaseItem = {
 
 interface ServiceProviderListProps {
   services: BaseItem[];
-  events: BaseItem[];
 }
 
-const ServiceProviderList = ({ services, events }: ServiceProviderListProps) => {
+const ServiceProviderList = ({ services }: ServiceProviderListProps) => {
   const navigate = useNavigate();
   const [isExpanded, setIsExpanded] = useState(false);
   const [fullyExpanded, setFullyExpanded] = useState(false);
@@ -66,11 +65,8 @@ const ServiceProviderList = ({ services, events }: ServiceProviderListProps) => 
       return Object.values(byVendor);
     }
 
-    return [
-      ...services.map((s) => ({ ...s, type: 'service' })),
-      ...events.map((e) => ({ ...e, type: 'event' })),
-    ];
-  }, [services, events, useDemo]);
+    return services.map((s) => ({ ...s, type: 'service' }));
+  }, [services, useDemo]);
 
   const handleItemClick = (item: BaseItem) => {
     setSelectedItem(item);
@@ -219,17 +215,13 @@ const ServiceProviderList = ({ services, events }: ServiceProviderListProps) => 
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start gap-2 mb-1">
                             <h3 className="font-semibold text-sm sm:text-base truncate flex-1">{item.title}</h3>
-                            {item.type === 'service' ? (
-                              <Badge variant="default" className="shrink-0 text-xs">Service</Badge>
-                            ) : (
-                              <Badge variant="secondary" className="shrink-0 text-xs">Event</Badge>
-                            )}
+                            <Badge variant="default" className="shrink-0 text-xs">Service</Badge>
                           </div>
                           <p className="text-xs sm:text-sm text-muted-foreground line-clamp-1 sm:line-clamp-2 mb-2">
                             {item.description}
                           </p>
                           <div className="flex items-center gap-2 flex-wrap text-xs text-muted-foreground">
-                            {item.type === 'service' && item.price && (
+                            {item.price && (
                               <span className="flex items-center gap-1">
                                 <DollarSign className="h-3 w-3" />
                                 ₦{item.price}
@@ -242,12 +234,10 @@ const ServiceProviderList = ({ services, events }: ServiceProviderListProps) => 
                             )}
                           </div>
                         </div>
-                        {item.type === 'service' && (
-                          <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
-                            <Star className="h-3 w-3 sm:h-4 sm:w-4 fill-yellow-400 text-yellow-400" />
-                            <span className="text-xs sm:text-sm font-medium">4.8</span>
-                          </div>
-                        )}
+                        <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
+                          <Star className="h-3 w-3 sm:h-4 sm:w-4 fill-yellow-400 text-yellow-400" />
+                          <span className="text-xs sm:text-sm font-medium">4.8</span>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -273,82 +263,41 @@ const ServiceProviderList = ({ services, events }: ServiceProviderListProps) => 
                   <p>{selectedItem.description}</p>
                 </div>
 
-                {selectedItem.type === 'service' ? (
-                  <>
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-lg">Service Details</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        {selectedItem.price && (
-                          <div>
-                            <p className="text-sm text-muted-foreground">Price</p>
-                            <p className="text-2xl font-bold text-primary">₦{selectedItem.price}</p>
-                          </div>
-                        )}
-                        {selectedItem.category && (
-                          <div>
-                            <p className="text-sm text-muted-foreground">Category</p>
-                            <Badge>{selectedItem.category}</Badge>
-                          </div>
-                        )}
-                        {selectedItem.vendor_profiles?.business_name && (
-                          <div>
-                            <p className="text-sm text-muted-foreground">Provider</p>
-                            <p className="font-medium">{selectedItem.vendor_profiles.business_name}</p>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Service Details</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {selectedItem.price && (
+                      <div>
+                        <p className="text-sm text-muted-foreground">Price</p>
+                        <p className="text-2xl font-bold text-primary">₦{selectedItem.price}</p>
+                      </div>
+                    )}
+                    {selectedItem.category && (
+                      <div>
+                        <p className="text-sm text-muted-foreground">Category</p>
+                        <Badge>{selectedItem.category}</Badge>
+                      </div>
+                    )}
+                    {selectedItem.vendor_profiles?.business_name && (
+                      <div>
+                        <p className="text-sm text-muted-foreground">Provider</p>
+                        <p className="font-medium">{selectedItem.vendor_profiles.business_name}</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
 
-                    <div className="space-y-2">
-                      <Button className="w-full" size="lg">
-                        Book Service
-                      </Button>
-                      <Button variant="outline" className="w-full" size="lg">
-                        <Phone className="h-4 w-4 mr-2" />
-                        Contact Provider
-                      </Button>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-lg">Event Details</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <div>
-                          <p className="text-sm text-muted-foreground">Date</p>
-                          <p className="font-medium">
-                            {new Date(selectedItem.event_date).toLocaleDateString('en-US', {
-                              weekday: 'long',
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric'
-                            })}
-                          </p>
-                        </div>
-                        {selectedItem.event_type && (
-                          <div>
-                            <p className="text-sm text-muted-foreground">Type</p>
-                            <Badge>{selectedItem.event_type}</Badge>
-                          </div>
-                        )}
-                        {selectedItem.status && (
-                          <div>
-                            <p className="text-sm text-muted-foreground">Status</p>
-                            <Badge variant="secondary">{selectedItem.status}</Badge>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-
-                    <Button className="w-full" size="lg">
-                      Register for Event
-                    </Button>
-                  </>
-                )}
+                <div className="space-y-2">
+                  <Button className="w-full" size="lg">
+                    Book Service
+                  </Button>
+                  <Button variant="outline" className="w-full" size="lg">
+                    <Phone className="h-4 w-4 mr-2" />
+                    Contact Provider
+                  </Button>
+                </div>
               </div>
             </>
           )}

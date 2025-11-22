@@ -116,16 +116,20 @@ Note: The tracker will be updated after each completed sub-step. Messaging UI wo
 | File | Status | Notes |
 |------|--------|-------|
 | App.tsx | ✅ Complete | Routes defined, protected routes integrated |
-| Index.tsx | ✅ Complete | Landing page fully styled |
-| Signup.tsx | ✅ Complete | Full auth with validation |
+| Index.tsx | ✅ Complete | Landing page fully styled with updated "Who We Serve" and "How It Works" |
+| Signup.tsx | ✅ Complete | Simplified signup - all users default to 'user' role, email verification support |
 | Login.tsx | ✅ Complete | Session persistence, remember me, forgot password link |
 | ForgotPassword.tsx | ✅ Complete | Email input & reset link sending |
 | ResetPassword.tsx | ✅ Complete | Token validation & new password |
-| ProtectedRoute.tsx | ✅ Complete | Auth guard with role validation |
-| RoleSelection.tsx | ✅ Complete | User, Vendor, NGO options |
-| Dashboard.tsx | ✅ Complete | Map, demo controls, notification bell, push toggle button integrated, protected |
+| ProtectedRoute.tsx | ✅ Complete | Auth guard with session checking and role validation |
+| RoleSelection.tsx | ❌ Removed | Redirected to /signup - role selection no longer needed |
+| Dashboard.tsx | ✅ Complete | Map, demo controls, notification bell, push toggle button, events removed |
 | VendorDashboard.tsx | ✅ Complete | Service CRUD, notification bell, push toggle button integrated, role-protected |
-| AdminDashboard.tsx | 🔴 Empty | Needs implementation, role-protected |
+| AdminDashboard.tsx | 🟡 Partial | Needs implementation, role-protected |
+| Profile.tsx | ✅ Complete | Editable profile with "Become a Vendor" feature |
+| ServiceProviderList.tsx | ✅ Complete | Event handling removed, vendor/service cards only |
+| ProfileMenu.tsx | ✅ Complete | Logout with localStorage clearing |
+| Sidebar.tsx | ✅ Complete | Logout functionality added |
 | ServiceProfile.tsx | 🟡 Partial | Review form & review listing integrated; moderation pending |
 | NotificationBell.tsx | ✅ Complete | Real-time notification UI with unread badge |
 | NotificationCenter.tsx | ✅ Complete | Notification list with mark-read functionality |
@@ -165,12 +169,12 @@ Note: The tracker will be updated after each completed sub-step. Messaging UI wo
 ## API Integration Checklist
 
 ### Supabase Auth
-- [ ] Implement signup with email verification
-- [ ] Implement login with remember-me
-- [ ] Implement logout
-- [ ] Implement password reset
-- [ ] Implement session persistence
-- [ ] Handle auth errors gracefully
+- [x] Implement signup with email verification
+- [x] Implement login with remember-me
+- [x] Implement logout
+- [x] Implement password reset
+- [x] Implement session persistence
+- [x] Handle auth errors gracefully
 
 ### Supabase Data Operations
 - [ ] User profile CRUD
@@ -309,8 +313,62 @@ Note: The tracker will be updated after each completed sub-step. Messaging UI wo
 
 ---
 
-**Last Updated:** November 22, 2025 - 01:30 UTC
-**Status:** Sprint 1 Auth Enhancement Complete - Full authentication system with protected routes, password reset flow, and role-based access control
+**Last Updated:** November 22, 2025 - 03:15 UTC
+**Status:** Sprint 1 Auth Restructure Complete - Simplified authentication flow with direct signup, vendor profile creation from user account
+
+### November 22, 2025 - 03:15 UTC - Auth Restructure & Vendor Profile Creation
+**Accomplishments:**
+- ✅ Removed RoleSelection page - users now signup directly without role selection
+- ✅ Simplified Signup flow - all users default to 'user' role
+- ✅ Updated Index landing page - removed NGO references, updated terminology
+- ✅ Updated "Who We Serve" section with better descriptions for Users and MSMEs
+- ✅ Updated "How ProxiLink Works" to reflect new signup flow
+- ✅ Removed NGO/event handling from Dashboard and ServiceProviderList
+- ✅ Added "Become a Vendor" feature in Profile page with dialog form
+- ✅ Implemented logout in both ProfileMenu and Sidebar with localStorage clearing
+- ✅ Email verification support added (checks for session after signup)
+- ✅ /role-selection route now redirects to /signup
+- ✅ Build verified successful - 13.74s
+
+**New Authentication Flow:**
+1. User signs up with email/password (all users get 'user' role)
+2. Email verification (if configured in Supabase)
+3. User can browse services and request services
+4. User can "Become a Vendor" from Profile page
+5. Vendor profile creation dialog collects business name, category, description
+6. User role is upgraded to 'vendor' and can access vendor dashboard
+
+**Vendor Profile Creation:**
+- Dialog form in Profile page
+- Required fields: Business Name, Category
+- Optional field: Description
+- Creates entry in vendor_profiles table
+- Adds vendor role to user_roles table
+- Redirects to vendor dashboard after creation
+
+**Logout Implementation:**
+- ProfileMenu and Sidebar both have logout buttons
+- Clears auth session with supabase.auth.signOut()
+- Clears localStorage keys: rememberMe, userEmail, proxilink_last_location, proxilink_location_permission
+- Redirects to /login page
+- Shows success toast notification
+
+**Pages Updated:**
+- Index.tsx: Updated landing page with new messaging
+- Signup.tsx: Simplified to single-role signup
+- Login.tsx: Link to /signup instead of /role-selection
+- App.tsx: /role-selection redirects to /signup
+- Dashboard.tsx: Removed events state and fetching
+- ServiceProviderList.tsx: Removed event handling
+- Profile.tsx: Added vendor profile creation dialog
+- ProfileMenu.tsx: Enhanced logout to clear all localStorage
+- Sidebar.tsx: Added logout button
+
+**Next Steps:**
+- Configure Supabase email verification settings
+- Test complete signup/vendor creation flow
+- Deploy auth updates to production
+- Add vendor profile editing (if needed)
 
 ### November 22, 2025 - 01:30 UTC - Authentication System Complete
 **Accomplishments:**

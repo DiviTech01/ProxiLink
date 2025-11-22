@@ -1,42 +1,22 @@
-import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams, Link } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
 import { MapPin, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Signup = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<string>("");
   const [errors, setErrors] = useState<Record<string, string>>({});
-  
-  // Role-specific fields
-  const [businessName, setBusinessName] = useState("");
-  const [category, setCategory] = useState("");
-  const [description, setDescription] = useState("");
-  const [organizationName, setOrganizationName] = useState("");
-  const [impactArea, setImpactArea] = useState("");
-
-  useEffect(() => {
-    const role = searchParams.get("role");
-    if (role) {
-      setSelectedRole(role);
-    } else {
-      navigate("/role-selection");
-    }
-  }, [searchParams, navigate]);
 
   // Validation function
   const validateForm = (): boolean => {
@@ -77,25 +57,6 @@ const Signup = () => {
       newErrors.password = "Password must contain at least one number";
     }
 
-    // Role-specific validation
-    if (selectedRole === "vendor") {
-      if (!businessName.trim()) {
-        newErrors.businessName = "Business name is required";
-      }
-      if (!category.trim()) {
-        newErrors.category = "Category is required";
-      }
-    }
-
-    if (selectedRole === "ngo") {
-      if (!organizationName.trim()) {
-        newErrors.organizationName = "Organization name is required";
-      }
-      if (!impactArea.trim()) {
-        newErrors.impactArea = "Impact area is required";
-      }
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -111,7 +72,7 @@ const Signup = () => {
     setLoading(true);
 
     try {
-      const redirectUrl = `${window.location.origin}/`;
+      const redirectUrl = `${window.location.origin}/dashboard`;
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
@@ -126,6 +87,13 @@ const Signup = () => {
       if (signUpError) throw signUpError;
 
       if (authData.user) {
+        // Check if email confirmation is required
+        if (authData.session === null) {
+          toast.success("Please check your email to verify your account");
+          navigate("/login");
+          return;
+        }
+
         // Create profile
         const { error: profileError } = await supabase.from("profiles").insert({
           id: authData.user.id,
@@ -135,44 +103,18 @@ const Signup = () => {
 
         if (profileError) throw profileError;
 
-        // Assign role
+        // Assign default 'user' role
         const { error: roleError } = await supabase.from("user_roles").insert([{
           user_id: authData.user.id,
-          role: selectedRole,
+          role: "user",
         }]);
 
         if (roleError) throw roleError;
 
-        // Create role-specific profile
-        if (selectedRole === "vendor") {
-          const { error } = await supabase.from("vendor_profiles").insert({
-            user_id: authData.user.id,
-            business_name: businessName || fullName,
-            category: category || "general",
-            description: description,
-          });
-          if (error) throw error;
-        } else if (selectedRole === "ngo") {
-          const { error } = await supabase.from("ngo_profiles").insert({
-            user_id: authData.user.id,
-            organization_name: organizationName || fullName,
-            impact_area: impactArea || "general",
-            description: description,
-          });
-          if (error) throw error;
-        }
-
-        toast.success("Account created successfully!");
+        toast.success("Account created successfully! Welcome to ProxiLink!");
         // Welcome notification is handled server-side by a DB trigger (supabase migration)
         
-        // Redirect based on role
-        if (selectedRole === "vendor") {
-          navigate("/vendor/dashboard");
-        } else if (selectedRole === "ngo") {
-          navigate("/dashboard");
-        } else {
-          navigate("/dashboard");
-        }
+        navigate("/dashboard");
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -181,16 +123,6 @@ const Signup = () => {
       setLoading(false);
     }
   };
-
-  const getRoleBadge = () => {
-    const roleMap: Record<string, { label: string; color: string }> = {
-      user: { label: "User", color: "bg-primary" },
-      vendor: { label: "Vendor", color: "bg-secondary" }
-    };
-    return roleMap[selectedRole] || roleMap.user;
-  };
-
-  const role = getRoleBadge();
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 p-3 sm:p-4">
@@ -202,11 +134,8 @@ const Signup = () => {
             </div>
             <span className="text-2xl font-bold">ProxiLink</span>
           </div>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <CardTitle className="text-xl sm:text-2xl">Create Account</CardTitle>
-            <Badge className={role.color}>{role.label}</Badge>
-          </div>
-          <CardDescription className="text-sm">Sign up to get started</CardDescription>
+          <CardTitle className="text-xl sm:text-2xl">Create Account</CardTitle>
+          <CardDescription className="text-sm">Join ProxiLink to discover services near you</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignup} className="space-y-4">
@@ -293,131 +222,15 @@ const Signup = () => {
               )}
             </div>
 
-            {/* Role-specific fields */}
-            {selectedRole === "vendor" && (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="businessName">Business Name</Label>
-                  <Input
-                    id="businessName"
-                    placeholder="Your Business"
-                    value={businessName}
-                    onChange={(e) => {
-                      setBusinessName(e.target.value);
-                      if (errors.businessName) setErrors({ ...errors, businessName: "" });
-                    }}
-                    aria-invalid={!!errors.businessName}
-                  />
-                  {errors.businessName && (
-                    <p className="text-sm text-destructive flex items-center gap-1">
-                      <AlertCircle className="h-4 w-4" />
-                      {errors.businessName}
-                    </p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="category">Category</Label>
-                  <Input
-                    id="category"
-                    placeholder="e.g., Food, Tech, Fashion"
-                    value={category}
-                    onChange={(e) => {
-                      setCategory(e.target.value);
-                      if (errors.category) setErrors({ ...errors, category: "" });
-                    }}
-                    aria-invalid={!!errors.category}
-                  />
-                  {errors.category && (
-                    <p className="text-sm text-destructive flex items-center gap-1">
-                      <AlertCircle className="h-4 w-4" />
-                      {errors.category}
-                    </p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    placeholder="Tell us about your business"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    rows={3}
-                  />
-                </div>
-              </>
-            )}
-
-            {selectedRole === "ngo" && (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="organizationName">Organization Name</Label>
-                  <Input
-                    id="organizationName"
-                    placeholder="Your Organization"
-                    value={organizationName}
-                    onChange={(e) => {
-                      setOrganizationName(e.target.value);
-                      if (errors.organizationName) setErrors({ ...errors, organizationName: "" });
-                    }}
-                    aria-invalid={!!errors.organizationName}
-                  />
-                  {errors.organizationName && (
-                    <p className="text-sm text-destructive flex items-center gap-1">
-                      <AlertCircle className="h-4 w-4" />
-                      {errors.organizationName}
-                    </p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="impactArea">Impact Area</Label>
-                  <Input
-                    id="impactArea"
-                    placeholder="e.g., Health, Education, Safety"
-                    value={impactArea}
-                    onChange={(e) => {
-                      setImpactArea(e.target.value);
-                      if (errors.impactArea) setErrors({ ...errors, impactArea: "" });
-                    }}
-                    aria-invalid={!!errors.impactArea}
-                  />
-                  {errors.impactArea && (
-                    <p className="text-sm text-destructive flex items-center gap-1">
-                      <AlertCircle className="h-4 w-4" />
-                      {errors.impactArea}
-                    </p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    placeholder="Tell us about your organization"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    rows={3}
-                  />
-                </div>
-              </>
-            )}
-
-
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Creating account..." : "Sign Up"}
             </Button>
           </form>
-          <div className="mt-4 text-center text-sm space-y-2">
-            <button
-              onClick={() => navigate("/role-selection")}
-              className="text-muted-foreground hover:text-foreground block w-full"
-            >
-              Change role
-            </button>
-            <div>
-              Already have an account?{" "}
-              <Link to="/login" className="text-primary hover:underline">
-                Sign in
-              </Link>
-            </div>
+          <div className="mt-4 text-center text-sm">
+            <span className="text-muted-foreground">Already have an account? </span>
+            <Link to="/login" className="text-primary hover:underline font-medium">
+              Sign in
+            </Link>
           </div>
         </CardContent>
       </Card>

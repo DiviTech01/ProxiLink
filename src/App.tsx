@@ -2,14 +2,13 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { lazy, Suspense } from "react";
 
 // Eager load critical landing pages
 import Index from "./pages/Index";
 import Splash from "./pages/Splash";
 import Onboarding from "./pages/Onboarding";
-import RoleSelection from "./pages/RoleSelection";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -56,7 +55,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/splash" element={<Splash />} />
             <Route path="/onboarding" element={<Onboarding />} />
-            <Route path="/role-selection" element={<RoleSelection />} />
+            <Route path="/role-selection" element={<Navigate to="/signup" replace />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
