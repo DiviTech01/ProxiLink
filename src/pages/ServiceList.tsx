@@ -86,17 +86,17 @@ const ServiceList = () => {
   };
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <div className="sticky top-0 z-40 bg-card border-b shadow-sm">
-        <div className="container mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold mb-4">Available Services</h1>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+      <div className="sticky top-0 z-40 bg-card border-b shadow-lg">
+        <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
+          <h1 className="text-lg sm:text-2xl font-bold mb-3 sm:mb-4">Available Services</h1>
 
           {/* Filters */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
             <div className="space-y-2">
-              <Label htmlFor="category-filter">Category</Label>
+              <Label htmlFor="category-filter" className="text-sm sm:text-base">Category</Label>
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger id="category-filter">
+                <SelectTrigger id="category-filter" className="min-h-[44px] text-sm sm:text-base">
                   <SelectValue placeholder="All categories" />
                 </SelectTrigger>
                 <SelectContent>
@@ -111,7 +111,7 @@ const ServiceList = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="proximity-filter">Radius (km)</Label>
+              <Label htmlFor="proximity-filter" className="text-sm sm:text-base">Radius (km)</Label>
               <Input
                 id="proximity-filter"
                 type="number"
@@ -120,6 +120,7 @@ const ServiceList = () => {
                 value={proximityFilter}
                 onChange={(e) => setProximityFilter(e.target.value)}
                 placeholder="50"
+                className="min-h-[44px] text-sm sm:text-base"
               />
             </div>
 
@@ -130,6 +131,7 @@ const ServiceList = () => {
                   setCategoryFilter('');
                   setProximityFilter('50');
                 }}
+                className="w-full md:w-auto min-h-[44px] text-sm sm:text-base"
               >
                 Reset Filters
               </Button>
