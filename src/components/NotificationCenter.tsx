@@ -11,13 +11,13 @@ const NotificationCenter: React.FC<{ onClose?: () => void }> = ({ onClose }) => 
   const navigate = useNavigate();
 
   return (
-    <div className="w-full max-w-md">
+    <div className="w-full max-w-md px-3 sm:px-0">
       <div className="flex items-center justify-between mb-4 mt-4">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={() => markAllRead()}>
+          <Button variant="ghost" size="sm" onClick={() => markAllRead()} className="text-xs sm:text-sm">
             Mark all read
           </Button>
-          <Button variant="outline" size="sm" onClick={onClose}>Close</Button>
+          <Button variant="outline" size="sm" onClick={onClose} className="text-xs sm:text-sm">Close</Button>
         </div>
       </div>
 

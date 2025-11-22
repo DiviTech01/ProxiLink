@@ -193,7 +193,7 @@ const Signup = () => {
   const role = getRoleBadge();
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-muted/30 p-3 sm:p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
           <div className="flex items-center justify-center gap-2 mb-4">
@@ -202,11 +202,11 @@ const Signup = () => {
             </div>
             <span className="text-2xl font-bold">ProxiLink</span>
           </div>
-          <div className="flex items-center justify-between">
-            <CardTitle>Create Account</CardTitle>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <CardTitle className="text-xl sm:text-2xl">Create Account</CardTitle>
             <Badge className={role.color}>{role.label}</Badge>
           </div>
-          <CardDescription>Sign up to get started</CardDescription>
+          <CardDescription className="text-sm">Sign up to get started</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignup} className="space-y-4">

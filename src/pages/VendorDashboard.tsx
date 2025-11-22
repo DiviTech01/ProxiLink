@@ -18,7 +18,7 @@ const VendorDashboard = () => {
   const navigate = useNavigate();
   const { subscribed, loading: pushLoading, subscribeToPushNotifications, unsubscribeFromPushNotifications } = usePushNotifications();
   const [loading, setLoading] = useState(true);
-  type VendorService = { id?: string; title?: string; description?: string; status?: string; service_type?: string; price?: number };
+  type VendorService = { id?: string; title?: string; description?: string; status?: string; service_type?: string; price?: number; category?: string };
   const [services, setServices] = useState<VendorService[]>([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
   type VendorProfile = { id?: string; business_name?: string; location_lat?: number; location_lng?: number; category?: string };
@@ -209,73 +209,79 @@ const VendorDashboard = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
       {/* Header */}
       <header className="bg-card/80 border-b backdrop-blur-sm sticky top-0 z-40 shadow-sm">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <MapPin className="h-6 w-6 text-white" />
+        <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shrink-0">
+              <MapPin className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
             </div>
-            <div>
-              <h1 className="text-xl font-bold">ProxiLink Vendor Hub</h1>
-              <p className="text-sm text-muted-foreground">{vendorProfile?.business_name || "Vendor"}</p>
+            <div className="min-w-0">
+              <h1 className="text-base sm:text-xl font-bold truncate">ProxiLink Vendor Hub</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground truncate">{vendorProfile?.business_name || "Vendor"}</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 shrink-0">
             <NotificationBell />
             <Button
               onClick={() => subscribed ? unsubscribeFromPushNotifications() : subscribeToPushNotifications()}
               disabled={pushLoading}
               variant={subscribed ? "default" : "outline"}
               size="sm"
+              className="hidden sm:flex"
               title={subscribed ? "Disable push notifications" : "Enable push notifications"}
             >
               {pushLoading ? "..." : (subscribed ? "🔔 On" : "🔕 Off")}
             </Button>
-            <Button variant="outline" onClick={handleSignOut}>
+            <Button variant="outline" onClick={handleSignOut} size="sm" className="hidden sm:flex">
               <LogOut className="h-4 w-4 mr-2" />
               Sign Out
+            </Button>
+            <Button variant="outline" onClick={handleSignOut} size="icon" className="sm:hidden">
+              <LogOut className="h-4 w-4" />
             </Button>
           </div>
         </div>
       </header>
 
       {/* Tabs */}
-      <div className="bg-card/50 border-b sticky top-16 z-30">
-        <div className="container mx-auto px-4">
+      <div className="bg-card/50 border-b sticky top-[60px] sm:top-16 z-30">
+        <div className="container mx-auto px-3 sm:px-4">
           <div className="flex gap-1 py-2">
             <Button
               variant={activeTab === 'dashboard' ? 'default' : 'ghost'}
               onClick={() => setActiveTab('dashboard')}
-              className="gap-2"
+              className="gap-2 flex-1 sm:flex-none"
+              size="sm"
             >
               <BarChart3 className="h-4 w-4" />
-              Dashboard
+              <span className="hidden sm:inline">Dashboard</span>
             </Button>
             <Button
               variant={activeTab === 'services' ? 'default' : 'ghost'}
               onClick={() => setActiveTab('services')}
-              className="gap-2"
+              className="gap-2 flex-1 sm:flex-none"
+              size="sm"
             >
               <Package className="h-4 w-4" />
-              Services
+              <span className="hidden sm:inline">Services</span>
             </Button>
             <Button
               variant={activeTab === 'map' ? 'default' : 'ghost'}
               onClick={() => setActiveTab('map')}
-              className="gap-2"
+              className="gap-2 flex-1 sm:flex-none"
+              size="sm"
             >
               <MapPin className="h-4 w-4" />
-              My Location
+              <span className="hidden sm:inline">My Location</span>
             </Button>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
-        {/* Dashboard Tab */}
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">\n        {/* Dashboard Tab */}
         {activeTab === 'dashboard' && (
           <div className="space-y-8">
             {/* Analytics Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               <Card className="border-l-4 border-l-blue-500">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">Active Services</CardTitle>
@@ -283,10 +289,10 @@ const VendorDashboard = () => {
                 <CardContent>
                   <div className="flex items-end justify-between">
                     <div>
-                      <div className="text-4xl font-bold">{activeServices}</div>
+                      <div className="text-3xl sm:text-4xl font-bold">{activeServices}</div>
                       <p className="text-xs text-muted-foreground mt-1">Active right now</p>
                     </div>
-                    <Zap className="h-8 w-8 text-blue-500/40" />
+                    <Zap className="h-7 w-7 sm:h-8 sm:w-8 text-blue-500/40" />
                   </div>
                 </CardContent>
               </Card>
@@ -298,10 +304,10 @@ const VendorDashboard = () => {
                 <CardContent>
                   <div className="flex items-end justify-between">
                     <div>
-                      <div className="text-4xl font-bold">{services.length}</div>
+                      <div className="text-3xl sm:text-4xl font-bold">{services.length}</div>
                       <p className="text-xs text-muted-foreground mt-1">All time</p>
                     </div>
-                    <Package className="h-8 w-8 text-green-500/40" />
+                    <Package className="h-7 w-7 sm:h-8 sm:w-8 text-green-500/40" />
                   </div>
                 </CardContent>
               </Card>
@@ -313,10 +319,10 @@ const VendorDashboard = () => {
                 <CardContent>
                   <div className="flex items-end justify-between">
                     <div>
-                      <div className="text-2xl font-bold line-clamp-1">{vendorProfile?.category || "N/A"}</div>
+                      <div className="text-xl sm:text-2xl font-bold line-clamp-1">{vendorProfile?.category || "N/A"}</div>
                       <p className="text-xs text-muted-foreground mt-1">Your specialty</p>
                     </div>
-                    <TrendingUp className="h-8 w-8 text-purple-500/40" />
+                    <TrendingUp className="h-7 w-7 sm:h-8 sm:w-8 text-purple-500/40" />
                   </div>
                 </CardContent>
               </Card>
@@ -328,10 +334,10 @@ const VendorDashboard = () => {
                 <CardContent>
                   <div className="flex items-end justify-between">
                     <div>
-                      <div className="text-2xl font-bold">100%</div>
+                      <div className="text-xl sm:text-2xl font-bold">100%</div>
                       <p className="text-xs text-muted-foreground mt-1">Profile complete</p>
                     </div>
-                    <Eye className="h-8 w-8 text-orange-500/40" />
+                    <Eye className="h-7 w-7 sm:h-8 sm:w-8 text-orange-500/40" />
                   </div>
                 </CardContent>
               </Card>
@@ -398,12 +404,13 @@ const VendorDashboard = () => {
 
         {/* Services Tab */}
         {activeTab === 'services' && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold">My Services</h2>
-              <Button onClick={() => setShowCreateForm(!showCreateForm)}>
+          <div className="space-y-4 sm:space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <h2 className="text-xl sm:text-2xl font-bold">My Services</h2>
+              <Button onClick={() => setShowCreateForm(!showCreateForm)} className="w-full sm:w-auto">
                 <Plus className="h-4 w-4 mr-2" />
-                {showCreateForm ? "Cancel" : "Create New Service"}
+                <span className="hidden sm:inline">{showCreateForm ? "Cancel" : "Create New Service"}</span>
+                <span className="sm:hidden">{showCreateForm ? "Cancel" : "New Service"}</span>
               </Button>
             </div>
 
@@ -416,7 +423,7 @@ const VendorDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handleCreateService} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="title">Service Title</Label>
                         <Input
@@ -439,7 +446,7 @@ const VendorDashboard = () => {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="serviceType">Service Type</Label>
                         <Select value={serviceType} onValueChange={setServiceType}>

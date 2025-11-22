@@ -128,19 +128,19 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen w-full bg-background">
       {/* Top header in normal flow so it doesn't overlap the map */}
-      <div className="container mx-auto px-4 py-4">
-        <div className="bg-card/95 backdrop-blur-sm px-4 py-3 rounded-2xl shadow-lg border border-border flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <MapPin className="h-6 w-6 text-white" />
+      <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
+        <div className="bg-card/95 backdrop-blur-sm px-3 sm:px-4 py-2 sm:py-3 rounded-xl sm:rounded-2xl shadow-lg border border-border flex items-center justify-between">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shrink-0">
+              <MapPin className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
             </div>
-            <div>
-              <h1 className="text-lg font-bold">ProxiLink</h1>
-              <p className="text-sm text-muted-foreground">{profile?.business_name || 'Vendor'}</p>
+            <div className="min-w-0">
+              <h1 className="text-base sm:text-lg font-bold truncate">ProxiLink</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground truncate">{profile?.business_name || 'Vendor'}</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <NotificationBell />
             <ProfileMenu profile={profile} />
           </div>
@@ -166,14 +166,14 @@ const Dashboard = () => {
 
       {/* Proximity Alert - Top Center */}
       {showProximityAlert && nearbyProvider && (
-        <Card className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-card/95 backdrop-blur-sm shadow-strong border-primary/20 max-w-sm animate-fade-in">
-          <div className="p-4">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                <Bell className="h-5 w-5 text-primary animate-pulse" />
+        <Card className="fixed top-20 sm:top-4 left-2 right-2 sm:left-1/2 sm:right-auto sm:transform sm:-translate-x-1/2 z-50 bg-card/95 backdrop-blur-sm shadow-strong border-primary/20 max-w-sm mx-auto animate-fade-in">
+          <div className="p-3 sm:p-4">
+            <div className="flex items-start gap-2 sm:gap-3">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                <Bell className="h-4 w-4 sm:h-5 sm:w-5 text-primary animate-pulse" />
               </div>
-              <div className="flex-1">
-                <p className="font-semibold text-sm mb-1">
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-xs sm:text-sm mb-1">
                   {nearbyProvider.vendor_profiles?.business_name} is nearby!
                 </p>
                 <p className="text-xs text-muted-foreground line-clamp-2">

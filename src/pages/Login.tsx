@@ -93,7 +93,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-muted/30 p-3 sm:p-4">
       <Card className="w-full max-w-md shadow-soft">
         <CardHeader className="space-y-1 text-center">
           <div className="flex items-center justify-center gap-2 mb-2">
@@ -102,8 +102,8 @@ const Login = () => {
             </div>
             <span className="text-2xl font-bold">ProxiLink</span>
           </div>
-          <CardTitle className="text-2xl">Welcome Back</CardTitle>
-          <CardDescription>Sign in to your account to continue</CardDescription>
+          <CardTitle className="text-xl sm:text-2xl">Welcome Back</CardTitle>
+          <CardDescription className="text-sm">Sign in to your ProxiLink account</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
