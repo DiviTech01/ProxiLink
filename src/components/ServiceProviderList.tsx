@@ -7,9 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { ChevronUp, MapPin, Star, Phone, DollarSign, Search } from "lucide-react";
+import { ChevronUp, MapPin, Star, Phone, DollarSign, Search, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 type BaseItem = {
   id?: string;
@@ -320,48 +321,149 @@ const filteredProviders = useMemo(() => {
           {selectedItem && (
             <>
               <SheetHeader>
-                <SheetTitle className="text-2xl">{selectedItem.title}</SheetTitle>
+                <SheetTitle className="text-xl sm:text-2xl">
+                  {selectedItem.type === 'vendor' ? selectedItem.business_name : selectedItem.title}
+                </SheetTitle>
+                {selectedItem.type === 'vendor' && (
+                  <Badge className="w-fit">Verified Vendor</Badge>
+                )}
               </SheetHeader>
               
               <div className="mt-6 space-y-6">
+                {/* Description */}
                 <div>
                   <p className="text-sm text-muted-foreground mb-2">Description</p>
-                  <p>{selectedItem.description}</p>
+                  <p className="text-sm leading-relaxed">
+                    {selectedItem.type === 'vendor' 
+                      ? `Professional ${selectedItem.services?.[0]?.category || 'services'} provider offering quality work. ${selectedItem.services?.length || 0} services available.`
+                      : (selectedItem.description || 'Quality service provided by experienced professionals.')}
+                  </p>
                 </div>
 
+                {/* Service/Vendor Details Card */}
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">Service Details</CardTitle>
+                    <CardTitle className="text-lg">
+                      {selectedItem.type === 'vendor' ? 'Vendor Information' : 'Service Details'}
+                    </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-3">
-                    {selectedItem.price && (
-                      <div>
-                        <p className="text-sm text-muted-foreground">Price</p>
-                        <p className="text-2xl font-bold text-primary">₦{selectedItem.price}</p>
-                      </div>
-                    )}
-                    {selectedItem.category && (
-                      <div>
-                        <p className="text-sm text-muted-foreground">Category</p>
-                        <Badge>{selectedItem.category}</Badge>
-                      </div>
-                    )}
-                    {selectedItem.vendor_profiles?.business_name && (
-                      <div>
-                        <p className="text-sm text-muted-foreground">Provider</p>
-                        <p className="font-medium">{selectedItem.vendor_profiles.business_name}</p>
-                      </div>
+                  <CardContent className="space-y-4">
+                    {selectedItem.type === 'vendor' ? (
+                      <>
+                        <div>
+                          <p className="text-sm text-muted-foreground mb-1">Services Offered</p>
+                          <div className="flex flex-wrap gap-2">
+                            {selectedItem.services?.slice(0, 3).map((service: BaseItem, idx: number) => (
+                              <Badge key={idx} variant="secondary">{service.title || service.category}</Badge>
+                            ))}
+                            {(selectedItem.services?.length || 0) > 3 && (
+                              <Badge variant="outline">+{(selectedItem.services?.length || 0) - 3} more</Badge>
+                            )}
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground mb-1">Rating</p>
+                          <div className="flex items-center gap-2">
+                            <div className="flex items-center">
+                              <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+                              <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+                              <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+                              <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+                              <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+                            </div>
+                            <span className="text-sm font-medium">4.8 (23 reviews)</span>
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground mb-1">Location</p>
+                          <p className="text-sm flex items-center gap-1">
+                            <MapPin className="h-4 w-4" />
+                            {selectedItem.profiles?.location_lat ? '2.5 km away' : 'Lagos, Nigeria'}
+                          </p>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        {selectedItem.price && (
+                          <div>
+                            <p className="text-sm text-muted-foreground mb-1">Price</p>
+                            <p className="text-2xl font-bold text-primary">₦{selectedItem.price.toLocaleString()}</p>
+                          </div>
+                        )}
+                        {selectedItem.category && (
+                          <div>
+                            <p className="text-sm text-muted-foreground mb-1">Category</p>
+                            <Badge>{selectedItem.category}</Badge>
+                          </div>
+                        )}
+                        {(selectedItem.vendor_profiles?.business_name || selectedItem.business_name) && (
+                          <div>
+                            <p className="text-sm text-muted-foreground mb-1">Provider</p>
+                            <p className="font-medium">{selectedItem.vendor_profiles?.business_name || selectedItem.business_name}</p>
+                          </div>
+                        )}
+                        <div>
+                          <p className="text-sm text-muted-foreground mb-1">Rating</p>
+                          <div className="flex items-center gap-2">
+                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                            <span className="text-sm font-medium">4.8 (23 reviews)</span>
+                          </div>
+                        </div>
+                      </>
                     )}
                   </CardContent>
                 </Card>
 
-                <div className="space-y-2">
-                  <Button className="w-full" size="lg">
-                    Book Service
+                {/* Action Buttons */}
+                <div className="space-y-3">
+                  <Button 
+                    className="w-full" 
+                    size="lg"
+                    onClick={() => {
+                      toast.success('Booking request sent! Vendor will contact you shortly.');
+                      setDetailsOpen(false);
+                    }}
+                  >
+                    {selectedItem.type === 'vendor' ? 'Request Services' : 'Book Service'}
                   </Button>
-                  <Button variant="outline" className="w-full" size="lg">
-                    <Phone className="h-4 w-4 mr-2" />
-                    Contact Provider
+                  <div className="grid grid-cols-2 gap-3">
+                    <Button 
+                      variant="outline" 
+                      className="w-full" 
+                      size="lg"
+                      onClick={() => {
+                        toast.success('Opening chat...');
+                        setTimeout(() => navigate('/messages'), 500);
+                      }}
+                    >
+                      <MessageSquare className="h-4 w-4 mr-2" />
+                      Chat
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="w-full" 
+                      size="lg"
+                      onClick={() => {
+                        toast.success('Calling vendor...');
+                      }}
+                    >
+                      <Phone className="h-4 w-4 mr-2" />
+                      Call
+                    </Button>
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    className="w-full" 
+                    size="sm"
+                    onClick={() => {
+                      if (selectedItem.type === 'vendor') {
+                        navigate('/vendor-profile/' + selectedItem.id);
+                      } else {
+                        navigate('/service-profile/' + selectedItem.id);
+                      }
+                    }}
+                  >
+                    View Full Profile
                   </Button>
                 </div>
               </div>

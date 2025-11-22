@@ -1,14 +1,95 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { List, User, CreditCard, Bell, HelpCircle, FileText, Settings, MessageSquare, LogOut } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { List, User, CreditCard, Bell, HelpCircle, FileText, Settings, MessageSquare, LogOut, Store, Briefcase } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 const Sidebar: React.FC = () => {
   const navigate = useNavigate();
+  const [isVendor, setIsVendor] = useState(false);
+  const [vendorDialogOpen, setVendorDialogOpen] = useState(false);
+  const [creatingVendor, setCreatingVendor] = useState(false);
+  const [vendorData, setVendorData] = useState({
+    business_name: '',
+    category: '',
+    description: ''
+  });
+
+  useEffect(() => {
+    checkVendorStatus();
+  }, []);
+
+  const checkVendorStatus = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data } = await supabase
+        .from('vendor_profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (data) {
+        setIsVendor(true);
+      }
+    } catch (error) {
+      console.log('User is not a vendor');
+    }
+  };
+
+  const handleBecomeVendor = async () => {
+    if (!vendorData.business_name || !vendorData.category) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    setCreatingVendor(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No user found');
+
+      const { error: vendorError } = await supabase
+        .from('vendor_profiles')
+        .insert({
+          user_id: user.id,
+          business_name: vendorData.business_name,
+          category: vendorData.category,
+          description: vendorData.description
+        });
+
+      if (vendorError) throw vendorError;
+
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .insert({
+          user_id: user.id,
+          role: 'vendor'
+        });
+
+      if (roleError) throw roleError;
+
+      toast.success('Vendor profile created successfully!');
+      setIsVendor(true);
+      setVendorDialogOpen(false);
+      
+      setTimeout(() => {
+        navigate('/vendor/dashboard');
+      }, 1500);
+    } catch (error) {
+      console.error('Error creating vendor profile:', error);
+      toast.error('Failed to create vendor profile');
+    } finally {
+      setCreatingVendor(false);
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -42,10 +123,20 @@ const Sidebar: React.FC = () => {
             <span>Profile</span>
           </Link>
 
-          <Link to="/vendor/dashboard" className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted rounded text-sm">
-            <Settings className="h-5 w-5 shrink-0" />
-            <span>Vendor Dashboard</span>
-          </Link>
+          {isVendor ? (
+            <Link to="/vendor/dashboard" className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted rounded text-sm">
+              <Store className="h-5 w-5 shrink-0" />
+              <span>Vendor Dashboard</span>
+            </Link>
+          ) : (
+            <button 
+              onClick={() => setVendorDialogOpen(true)}
+              className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted rounded text-sm w-full text-left"
+            >
+              <Briefcase className="h-5 w-5 shrink-0" />
+              <span>Become a Vendor</span>
+            </button>
+          )}
 
           <Link to="/payments" className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted rounded text-sm">
             <CreditCard className="h-5 w-5 shrink-0" />
@@ -86,6 +177,55 @@ const Sidebar: React.FC = () => {
           </button>
         </div>
       </SheetContent>
+
+      {/* Become a Vendor Dialog */}
+      <Dialog open={vendorDialogOpen} onOpenChange={setVendorDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Become a Vendor</DialogTitle>
+            <DialogDescription>
+              Set up your vendor profile to start offering services on ProxiLink
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="business_name">Business Name *</Label>
+              <Input
+                id="business_name"
+                placeholder="Enter your business name"
+                value={vendorData.business_name}
+                onChange={(e) => setVendorData({ ...vendorData, business_name: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="category">Category *</Label>
+              <Input
+                id="category"
+                placeholder="e.g., Plumbing, Electrical, Catering"
+                value={vendorData.category}
+                onChange={(e) => setVendorData({ ...vendorData, category: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="description">Description (Optional)</Label>
+              <Textarea
+                id="description"
+                placeholder="Tell customers about your services"
+                value={vendorData.description}
+                onChange={(e) => setVendorData({ ...vendorData, description: e.target.value })}
+                rows={3}
+              />
+            </div>
+            <Button 
+              onClick={handleBecomeVendor} 
+              disabled={creatingVendor || !vendorData.business_name || !vendorData.category}
+              className="w-full"
+            >
+              {creatingVendor ? 'Creating...' : 'Create Vendor Profile'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Sheet>
   );
 };
