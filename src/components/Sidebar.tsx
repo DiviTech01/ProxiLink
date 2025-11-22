@@ -1,10 +1,29 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { List, User, CreditCard, Bell, HelpCircle, FileText, Settings, MessageSquare } from 'lucide-react';
+import { List, User, CreditCard, Bell, HelpCircle, FileText, Settings, MessageSquare, LogOut } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const Sidebar: React.FC = () => {
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      localStorage.removeItem('rememberMe');
+      localStorage.removeItem('userEmail');
+      localStorage.removeItem('proxilink_last_location');
+      localStorage.removeItem('proxilink_location_permission');
+      toast.success("Logged out successfully");
+      navigate("/login");
+    } catch (error) {
+      toast.error("Failed to logout");
+    }
+  };
+
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -57,6 +76,14 @@ const Sidebar: React.FC = () => {
             <Settings className="h-5 w-5 shrink-0" />
             <span>Support</span>
           </Link>
+
+          <button 
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted rounded text-sm w-full text-left text-destructive hover:text-destructive"
+          >
+            <LogOut className="h-5 w-5 shrink-0" />
+            <span>Logout</span>
+          </button>
         </div>
       </SheetContent>
     </Sheet>

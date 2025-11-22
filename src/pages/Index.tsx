@@ -16,7 +16,7 @@ const Index = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild size="lg" variant="secondary" className="text-lg">
-                <Link to="/role-selection">
+                <Link to="/signup">
                   Get Started Free <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
@@ -43,22 +43,26 @@ const Index = () => {
             <div className="w-14 h-14 bg-gradient-hero rounded-lg flex items-center justify-center mb-6">
               <Users className="h-7 w-7 text-primary-foreground" />
             </div>
-            <h3 className="text-2xl font-bold mb-4">For USERS</h3>
+            <h3 className="text-2xl font-bold mb-4">For Users</h3>
             <p className="text-muted-foreground mb-6">
-              Discover jobs, gigs, learning opportunities, and community events happening near you in real-time
+              Find trusted service providers and local vendors near you in real-time
             </p>
             <ul className="space-y-3">
               <li className="flex items-start gap-2">
                 <Check className="h-5 w-5 text-accent mt-0.5" />
-                <span className="text-sm">Real-time job alerts</span>
+                <span className="text-sm">Real-time provider alerts</span>
               </li>
               <li className="flex items-start gap-2">
                 <Check className="h-5 w-5 text-accent mt-0.5" />
-                <span className="text-sm">Learning opportunities</span>
+                <span className="text-sm">Vendors near you</span>
               </li>
               <li className="flex items-start gap-2">
                 <Check className="h-5 w-5 text-accent mt-0.5" />
-                <span className="text-sm">Community events</span>
+                <span className="text-sm">Service ratings & reviews</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <Check className="h-5 w-5 text-accent mt-0.5" />
+                <span className="text-sm">Instant service requests</span>
               </li>
             </ul>
           </div>
@@ -69,25 +73,29 @@ const Index = () => {
             </div>
             <h3 className="text-2xl font-bold mb-4">For MSMEs & Vendors</h3>
             <p className="text-muted-foreground mb-6">
-              Broadcast your services and products to nearby customers at low cost with instant visibility
+              Reach nearby customers instantly and grow your business with real-time visibility
             </p>
             <ul className="space-y-3">
               <li className="flex items-start gap-2">
                 <Check className="h-5 w-5 text-accent mt-0.5" />
-                <span className="text-sm">Service broadcasting</span>
+                <span className="text-sm">Broadcast services instantly</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <Check className="h-5 w-5 text-accent mt-0.5" />
+                <span className="text-sm">Location-based discovery</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <Check className="h-5 w-5 text-accent mt-0.5" />
+                <span className="text-sm">Customer reviews & ratings</span>
               </li>
               <li className="flex items-start gap-2">
                 <Check className="h-5 w-5 text-accent mt-0.5" />
                 <span className="text-sm">Analytics dashboard</span>
               </li>
-              <li className="flex items-start gap-2">
-                <Check className="h-5 w-5 text-accent mt-0.5" />
-                <span className="text-sm">Customer reviews</span>
-              </li>
             </ul>
             <div className="mt-6 flex flex-col sm:flex-row gap-3">
               <Button asChild size="sm" variant="secondary" className="w-full sm:w-auto">
-                <Link to="/service/create">Create Service</Link>
+                <Link to="/signup">Become a Vendor</Link>
               </Button>
               <Button asChild size="sm" variant="outline" className="w-full sm:w-auto">
                 <Link to="/services">View Services</Link>
@@ -109,8 +117,8 @@ const Index = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
             <div className="text-center">
               <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4 text-primary-foreground text-2xl font-bold">1</div>
-              <h3 className="font-bold mb-2 text-lg">Register</h3>
-              <p className="text-muted-foreground text-sm">Choose your role: User or Vendor</p>
+              <h3 className="font-bold mb-2 text-lg">Sign Up</h3>
+              <p className="text-muted-foreground text-sm">Create your free account in seconds</p>
             </div>
             <div className="text-center">
               <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4 text-primary-foreground text-2xl font-bold">2</div>
@@ -119,8 +127,8 @@ const Index = () => {
             </div>
             <div className="text-center">
               <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4 text-primary-foreground text-2xl font-bold">3</div>
-              <h3 className="font-bold mb-2 text-lg">Discover & Connect</h3>
-              <p className="text-muted-foreground text-sm">Find opportunities or broadcast services nearby</p>
+              <h3 className="font-bold mb-2 text-lg">Discover or Offer</h3>
+              <p className="text-muted-foreground text-sm">Find services nearby or become a vendor to offer yours</p>
             </div>
             <div className="text-center">
               <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4 text-primary-foreground text-2xl font-bold">4</div>
@@ -135,9 +143,9 @@ const Index = () => {
       <section className="py-12 sm:py-20 container mx-auto px-4">
         <div className="bg-gradient-hero rounded-2xl p-8 sm:p-12 md:p-16 text-center text-primary-foreground shadow-strong">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6">Ready to Connect?</h2>
-          <p className="text-base sm:text-lg md:text-xl mb-6 sm:mb-8 opacity-95 max-w-2xl mx-auto">Join thousands of users, businesses, and organizations building a connected Africa</p>
+          <p className="text-base sm:text-lg md:text-xl mb-6 sm:mb-8 opacity-95 max-w-2xl mx-auto">Join thousands of users and vendors building a connected Africa</p>
           <Button asChild size="lg" variant="secondary" className="text-base sm:text-lg w-full sm:w-auto">
-            <Link to="/role-selection">
+            <Link to="/signup">
               Create Free Account <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
           </Button>

@@ -21,10 +21,8 @@ const Dashboard = () => {
   // vendor_profiles shape can vary depending on Supabase relation shape
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   type ServiceItem = { id?: string; vendor_profiles?: any; description?: string; title?: string; price?: number };
-  type EventItem = { id?: string; event_date?: string; event_type?: string; status?: string };
   const [profile, setProfile] = useState<Profile | null>(null);
   const [services, setServices] = useState<ServiceItem[]>([]);
-  const [events, setEvents] = useState<EventItem[]>([]);
   const [showProximityAlert, setShowProximityAlert] = useState(false);
   const [nearbyProvider, setNearbyProvider] = useState<ServiceItem | null>(null);
 
@@ -111,20 +109,6 @@ const Dashboard = () => {
     setServices(data || []);
   }, []);
 
-  const fetchEvents = useCallback(async () => {
-    const { data } = await supabase
-      .from("events")
-      .select(`
-        *,
-        profiles(full_name)
-      `)
-      .in("status", ["upcoming", "ongoing"])
-      .order("event_date", { ascending: true })
-      .limit(10);
-
-    setEvents(data || []);
-  }, []);
-
   return (
     <div className="min-h-screen w-full bg-background">
       {/* Top header in normal flow so it doesn't overlap the map */}
@@ -192,7 +176,7 @@ const Dashboard = () => {
       )}
 
       {/* Service Provider List - Bottom Sheet */}
-      <ServiceProviderList services={services} events={events} />
+      <ServiceProviderList services={services} />
     </div>
   );
 };

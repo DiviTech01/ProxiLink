@@ -25,9 +25,17 @@ const ProfileMenu = ({ profile }: ProfileMenuProps) => {
   const [open, setOpen] = useState(false);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    toast.success("Logged out successfully");
-    navigate("/");
+    try {
+      await supabase.auth.signOut();
+      localStorage.removeItem('rememberMe');
+      localStorage.removeItem('userEmail');
+      localStorage.removeItem('proxilink_last_location');
+      localStorage.removeItem('proxilink_location_permission');
+      toast.success("Logged out successfully");
+      navigate("/login");
+    } catch (error) {
+      toast.error("Failed to logout");
+    }
   };
 
   return (
