@@ -1,0 +1,109 @@
+import { NotificationRow } from '@/hooks/useNotifications';
+
+export const demoNotifications: NotificationRow[] = [
+  {
+    id: 'demo-1',
+    user_id: 'demo',
+    title: '🎉 Welcome to ProxiLink!',
+    content: 'Discover nearby service providers and vendors in your area.',
+    notification_type: 'welcome',
+    is_read: false,
+    created_at: new Date(Date.now() - 5 * 60000).toISOString(),
+  },
+  {
+    id: 'demo-2',
+    user_id: 'demo',
+    title: '📍 Nearby Services Available',
+    content: 'Fresh Water Services is now available within 2km of your location.',
+    notification_type: 'proximity',
+    is_read: false,
+    created_at: new Date(Date.now() - 15 * 60000).toISOString(),
+  },
+  {
+    id: 'demo-3',
+    user_id: 'demo',
+    title: '⭐ Service Rating Updated',
+    content: 'You received a 5-star rating for your recent service.',
+    notification_type: 'rating',
+    is_read: true,
+    created_at: new Date(Date.now() - 60 * 60000).toISOString(),
+  },
+  {
+    id: 'demo-4',
+    user_id: 'demo',
+    title: '🔔 New Service Request',
+    content: 'Someone is interested in your photography services.',
+    notification_type: 'request',
+    is_read: true,
+    created_at: new Date(Date.now() - 2 * 60 * 60000).toISOString(),
+  },
+  {
+    id: 'demo-5',
+    user_id: 'demo',
+    title: '💰 Payment Received',
+    content: 'You received ₦50,000 for your recent service delivery.',
+    notification_type: 'payment',
+    is_read: true,
+    created_at: new Date(Date.now() - 24 * 60 * 60000).toISOString(),
+  },
+];
+
+// Demo notifications that can appear as "new" incoming notifications
+export const incomingDemoNotifications: Omit<NotificationRow, 'id' | 'created_at'>[] = [
+  {
+    user_id: 'demo',
+    title: '🚗 New Vendor Near You',
+    content: 'Quick Fix Auto Services just joined ProxiLink 500m from your location.',
+    notification_type: 'proximity',
+    is_read: false,
+  },
+  {
+    user_id: 'demo',
+    title: '✨ Special Offer Available',
+    content: 'Get 20% off on all plumbing services this weekend!',
+    notification_type: 'promotion',
+    is_read: false,
+  },
+  {
+    user_id: 'demo',
+    title: '📦 Order Completed',
+    content: 'Your service request has been successfully completed.',
+    notification_type: 'order',
+    is_read: false,
+  },
+  {
+    user_id: 'demo',
+    title: '💬 New Message',
+    content: 'You have a new message from Tech Solutions Ltd.',
+    notification_type: 'message',
+    is_read: false,
+  },
+  {
+    user_id: 'demo',
+    title: '⏰ Service Reminder',
+    content: 'Your scheduled AC maintenance is in 2 hours.',
+    notification_type: 'reminder',
+    is_read: false,
+  },
+  {
+    user_id: 'demo',
+    title: '🎯 Profile Views',
+    content: 'Your vendor profile received 15 views today!',
+    notification_type: 'analytics',
+    is_read: false,
+  },
+  {
+    user_id: 'demo',
+    title: '🔥 Hot Deal Alert',
+    content: 'Limited time offer: Professional cleaning services at ₦5,000.',
+    notification_type: 'promotion',
+    is_read: false,
+  },
+  {
+    user_id: 'demo',
+    title: '👥 Connection Request',
+    content: 'Lagos Building Services wants to connect with you.',
+    notification_type: 'connection',
+    is_read: false,
+  },
+];
