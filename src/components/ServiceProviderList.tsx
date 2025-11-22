@@ -127,17 +127,17 @@ const ServiceProviderList = ({ services, events }: ServiceProviderListProps) => 
         />
 
         {/* Header */}
-        <div className="p-6 pb-4">
+        <div className="p-4 sm:p-6 pb-3 sm:pb-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-bold">Nearby Providers</h2>
-              <p className="text-sm text-muted-foreground">{allProviders.length} services near you</p>
+            <div className="flex-1 min-w-0">
+              <h2 className="text-lg sm:text-xl font-bold truncate">Nearby Providers</h2>
+              <p className="text-xs sm:text-sm text-muted-foreground">{allProviders.length} services near you</p>
 
               {!isExpanded && allProviders.length > 0 && (
-                <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
+                <div className="mt-2 flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
                   {allProviders.slice(0, 10).map((p, i) => (
-                    <div key={p.id || i} className="px-2 py-1 bg-muted/80 dark:bg-muted/30 rounded-full text-xs whitespace-nowrap">
-                      {p.business_name || p.title || p.vendor_profiles?.business_name}
+                    <div key={p.id || i} className="px-2 py-1 bg-muted/80 dark:bg-muted/30 rounded-full text-[10px] sm:text-xs whitespace-nowrap">
+                      {(p.business_name || p.title || p.vendor_profiles?.business_name || '').substring(0, 20)}
                     </div>
                   ))}
                 </div>
@@ -166,7 +166,7 @@ const ServiceProviderList = ({ services, events }: ServiceProviderListProps) => 
 
         {/* Provider List - only render when expanded */}
         {isExpanded && (
-          <div ref={listRef} className="overflow-y-auto h-[calc(100%-100px)] px-6 pb-6 space-y-3">
+          <div ref={listRef} className="overflow-y-auto h-[calc(100%-100px)] px-3 sm:px-6 pb-6 space-y-2 sm:space-y-3">
             {allProviders.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
                 <MapPin className="h-12 w-12 mb-2 opacity-50" />
@@ -176,33 +176,30 @@ const ServiceProviderList = ({ services, events }: ServiceProviderListProps) => 
                 allProviders.map((item: BaseItem) => (
                 item.type === 'vendor' ? (
                   <Card key={item.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleItemClick(item)}>
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-center gap-3">
-                          <Avatar className="w-12 h-12">
-                            <AvatarImage src={item.profiles?.avatar_url} />
-                            <AvatarFallback>{item.business_name?.[0] || 'V'}</AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h3 className="font-semibold truncate">{item.business_name}</h3>
-                              <Badge variant="default" className="shrink-0">Vendor</Badge>
-                            </div>
-                            <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
-                              {item.services?.slice(0,2).map((s: BaseItem) => s.title).join(' · ')}
-                            </p>
-                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                              <Badge variant="outline" className="text-xs">
-                                {item.services?.length} services
-                              </Badge>
-                            </div>
+                    <CardContent className="p-3 sm:p-4">
+                      <div className="flex items-start gap-2 sm:gap-3">
+                        <Avatar className="w-10 h-10 sm:w-12 sm:h-12 shrink-0">
+                          <AvatarImage src={item.profiles?.avatar_url} />
+                          <AvatarFallback>{item.business_name?.[0] || 'V'}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start gap-2 mb-1">
+                            <h3 className="font-semibold text-sm sm:text-base truncate flex-1">{item.business_name}</h3>
+                            <Badge variant="default" className="shrink-0 text-xs">Vendor</Badge>
                           </div>
+                          <p className="text-xs sm:text-sm text-muted-foreground line-clamp-1 mb-2">
+                            {item.services?.slice(0,2).map((s: BaseItem) => s.title).join(' · ')}
+                          </p>
+                          <Badge variant="outline" className="text-xs">
+                            {item.services?.length} services
+                          </Badge>
                         </div>
-                        <div className="flex items-center gap-1 text-sm shrink-0">
-                          <div className="text-right">
-                            <div className="text-sm font-medium">4.8</div>
-                            <div className="text-xs text-muted-foreground">(23 reviews)</div>
+                        <div className="flex flex-col items-end gap-0.5 shrink-0">
+                          <div className="flex items-center gap-0.5">
+                            <Star className="h-3 w-3 sm:h-4 sm:w-4 fill-yellow-400 text-yellow-400" />
+                            <span className="text-xs sm:text-sm font-medium">4.8</span>
                           </div>
+                          <span className="text-[10px] sm:text-xs text-muted-foreground">(23)</span>
                         </div>
                       </div>
                     </CardContent>
@@ -213,21 +210,21 @@ const ServiceProviderList = ({ services, events }: ServiceProviderListProps) => 
                     className="cursor-pointer hover:shadow-md transition-shadow"
                     onClick={() => handleItemClick(item)}
                   >
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between gap-3">
+                    <CardContent className="p-3 sm:p-4">
+                      <div className="flex items-start gap-2 sm:gap-3">
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-semibold truncate">{item.title}</h3>
+                          <div className="flex items-start gap-2 mb-1">
+                            <h3 className="font-semibold text-sm sm:text-base truncate flex-1">{item.title}</h3>
                             {item.type === 'service' ? (
-                              <Badge variant="default" className="shrink-0">Service</Badge>
+                              <Badge variant="default" className="shrink-0 text-xs">Service</Badge>
                             ) : (
-                              <Badge variant="secondary" className="shrink-0">Event</Badge>
+                              <Badge variant="secondary" className="shrink-0 text-xs">Event</Badge>
                             )}
                           </div>
-                          <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
+                          <p className="text-xs sm:text-sm text-muted-foreground line-clamp-1 sm:line-clamp-2 mb-2">
                             {item.description}
                           </p>
-                          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                          <div className="flex items-center gap-2 flex-wrap text-xs text-muted-foreground">
                             {item.type === 'service' && item.price && (
                               <span className="flex items-center gap-1">
                                 <DollarSign className="h-3 w-3" />
@@ -242,9 +239,9 @@ const ServiceProviderList = ({ services, events }: ServiceProviderListProps) => 
                           </div>
                         </div>
                         {item.type === 'service' && (
-                          <div className="flex items-center gap-1 text-sm shrink-0">
-                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                            <span className="font-medium">4.8</span>
+                          <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
+                            <Star className="h-3 w-3 sm:h-4 sm:w-4 fill-yellow-400 text-yellow-400" />
+                            <span className="text-xs sm:text-sm font-medium">4.8</span>
                           </div>
                         )}
                       </div>
