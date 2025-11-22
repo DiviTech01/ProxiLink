@@ -85,11 +85,11 @@ const Index = () => {
                 <span className="text-sm">Customer reviews</span>
               </li>
             </ul>
-            <div className="mt-6 flex gap-3">
-              <Button asChild size="sm" variant="secondary">
+            <div className="mt-6 flex flex-col sm:flex-row gap-3">
+              <Button asChild size="sm" variant="secondary" className="w-full sm:w-auto">
                 <Link to="/service/create">Create Service</Link>
               </Button>
-              <Button asChild size="sm" variant="outline">
+              <Button asChild size="sm" variant="outline" className="w-full sm:w-auto">
                 <Link to="/services">View Services</Link>
               </Button>
             </div>
@@ -106,7 +106,7 @@ const Index = () => {
             <p className="text-muted-foreground text-lg">Simple, fast, and effective</p>
           </div>
 
-          <div className="grid md:grid-cols-4 gap-8 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
             <div className="text-center">
               <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4 text-primary-foreground text-2xl font-bold">1</div>
               <h3 className="font-bold mb-2 text-lg">Register</h3>
@@ -132,11 +132,11 @@ const Index = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 container mx-auto px-4">
-        <div className="bg-gradient-hero rounded-2xl p-12 md:p-16 text-center text-primary-foreground shadow-strong">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6">Ready to Connect?</h2>
-          <p className="text-lg md:text-xl mb-8 opacity-95 max-w-2xl mx-auto">Join thousands of users, businesses, and organizations building a connected Africa</p>
-          <Button asChild size="lg" variant="secondary" className="text-lg">
+      <section className="py-12 sm:py-20 container mx-auto px-4">
+        <div className="bg-gradient-hero rounded-2xl p-8 sm:p-12 md:p-16 text-center text-primary-foreground shadow-strong">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6">Ready to Connect?</h2>
+          <p className="text-base sm:text-lg md:text-xl mb-6 sm:mb-8 opacity-95 max-w-2xl mx-auto">Join thousands of users, businesses, and organizations building a connected Africa</p>
+          <Button asChild size="lg" variant="secondary" className="text-base sm:text-lg w-full sm:w-auto">
             <Link to="/role-selection">
               Create Free Account <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
