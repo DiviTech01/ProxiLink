@@ -21,7 +21,10 @@ const Splash = () => {
             <MapPin className="h-14 w-14 text-primary" />
           </div>
         </div>
-        <h1 className="text-5xl font-bold text-white mb-3">ProxiLink</h1>
+        <div className="flex flex-col items-center">
+          <img src="/ProxiLink Logo.png" alt="ProxiLink" className="h-24 w-auto mb-4" />
+          <h1 className="text-5xl font-bold text-white mb-3">ProxiLink</h1>
+        </div>
         <p className="text-white/90 text-lg">Find services around you</p>
       </div>
     </div>

@@ -113,7 +113,10 @@ const Dashboard = () => {
       {/* Floating header over map */}
       <div className="fixed top-0 left-0 right-0 z-50 px-4 py-3 sm:py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <h1 className="text-lg sm:text-xl font-bold text-white drop-shadow-lg ml-12 sm:ml-14">ProxiLink</h1>
+          <div className="flex items-center gap-2 ml-12 sm:ml-14">
+            <img src="/ProxiLink Logo.png" alt="ProxiLink" className="h-8 sm:h-10 w-auto" />
+            <h1 className="text-lg sm:text-xl font-bold text-white drop-shadow-lg">ProxiLink</h1>
+          </div>
           <NotificationBell />
         </div>
       </div>
