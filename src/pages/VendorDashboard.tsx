@@ -215,7 +215,10 @@ const VendorDashboard = () => {
               <MapPin className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
             </div>
             <div className="min-w-0">
-              <h1 className="text-base sm:text-xl font-bold truncate">ProxiLink Vendor Hub</h1>
+              <div className="flex items-center gap-2">
+                <img src="/ProxiLink Logo.png" alt="ProxiLink" className="h-6 sm:h-8 w-auto" />
+                <h1 className="text-base sm:text-xl font-bold truncate">ProxiLink Vendor Hub</h1>
+              </div>
               <p className="text-xs sm:text-sm text-muted-foreground truncate">{vendorProfile?.business_name || "Vendor"}</p>
             </div>
           </div>

@@ -100,7 +100,10 @@ const Login = () => {
             <div className="w-10 h-10 bg-gradient-hero rounded-lg flex items-center justify-center">
               <MapPin className="h-6 w-6 text-primary-foreground" />
             </div>
-            <span className="text-2xl font-bold">ProxiLink</span>
+            <div className="flex items-center gap-2">
+              <img src="/ProxiLink Logo.png" alt="ProxiLink" className="h-8 w-auto" />
+              <span className="text-2xl font-bold">ProxiLink</span>
+            </div>
           </div>
           <CardTitle className="text-xl sm:text-2xl">Welcome Back</CardTitle>
           <CardDescription className="text-sm">Sign in to your ProxiLink account</CardDescription>
