@@ -79,12 +79,16 @@ const Signup = () => {
         options: {
           data: {
             full_name: fullName,
+            phone: phone,
           },
           emailRedirectTo: redirectUrl
         },
       });
 
-      if (signUpError) throw signUpError;
+      if (signUpError) {
+        console.error('Signup error:', signUpError);
+        throw signUpError;
+      }
 
       if (authData.user) {
         // Check if email confirmation is required
