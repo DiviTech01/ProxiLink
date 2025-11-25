@@ -6,18 +6,43 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Users, Briefcase, Activity, LogOut } from "lucide-react";
+import { 
+  Users, Briefcase, Activity, LogOut, Shield, CheckCircle, XCircle, 
+  Trash2, MapPin, DollarSign, TrendingUp, AlertTriangle, Eye, Ban 
+} from "lucide-react";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
   type UserProfile = { id?: string; full_name?: string; phone?: string; created_at?: string };
   type VendorProfile = { id?: string; business_name?: string; category?: string; verification_status?: boolean; created_at?: string };
 
-  const [stats, setStats] = useState({ users: 0, vendors: 0, services: 0, events: 0 });
+  const [stats, setStats] = useState({ 
+    users: 0, 
+    vendors: 0, 
+    services: 0, 
+    events: 0,
+    pendingVendors: 0,
+    revenue: 0 
+  });
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [vendors, setVendors] = useState<VendorProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; id: string; type: 'user' | 'vendor' }>({ 
+    open: false, 
+    id: '', 
+    type: 'user' 
+  });
 
   const checkAdminAccess = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -39,18 +64,21 @@ const AdminDashboard = () => {
   }, [navigate]);
 
   const fetchStats = useCallback(async () => {
-    const [usersCount, vendorsCount, servicesCount, eventsCount] = await Promise.all([
+    const [usersCount, vendorsCount, servicesCount, eventsCount, pendingVendors] = await Promise.all([
       supabase.from("profiles").select("*", { count: "exact", head: true }),
       supabase.from("vendor_profiles").select("*", { count: "exact", head: true }),
       supabase.from("services").select("*", { count: "exact", head: true }),
-      supabase.from("events").select("*", { count: "exact", head: true })
+      supabase.from("events").select("*", { count: "exact", head: true }),
+      supabase.from("vendor_profiles").select("*", { count: "exact", head: true }).eq("verification_status", false)
     ]);
 
     setStats({
       users: usersCount.count || 0,
       vendors: vendorsCount.count || 0,
       services: servicesCount.count || 0,
-      events: eventsCount.count || 0
+      events: eventsCount.count || 0,
+      pendingVendors: pendingVendors.count || 0,
+      revenue: 0 // Placeholder for future payment integration
     });
   }, []);
 
@@ -87,6 +115,76 @@ const AdminDashboard = () => {
     navigate("/");
   };
 
+  const handleVerifyVendor = async (vendorId: string) => {
+    try {
+      const { error } = await supabase
+        .from("vendor_profiles")
+        .update({ verification_status: true })
+        .eq("id", vendorId);
+
+      if (error) throw error;
+
+      toast.success("Vendor verified successfully");
+      await Promise.all([fetchStats(), fetchVendors()]);
+    } catch (error) {
+      console.error("Error verifying vendor:", error);
+      toast.error("Failed to verify vendor");
+    }
+  };
+
+  const handleUnverifyVendor = async (vendorId: string) => {
+    try {
+      const { error } = await supabase
+        .from("vendor_profiles")
+        .update({ verification_status: false })
+        .eq("id", vendorId);
+
+      if (error) throw error;
+
+      toast.success("Vendor verification removed");
+      await Promise.all([fetchStats(), fetchVendors()]);
+    } catch (error) {
+      console.error("Error unverifying vendor:", error);
+      toast.error("Failed to remove verification");
+    }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .delete()
+        .eq("id", userId);
+
+      if (error) throw error;
+
+      toast.success("User deleted successfully");
+      setDeleteDialog({ open: false, id: '', type: 'user' });
+      await Promise.all([fetchStats(), fetchUsers()]);
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      toast.error("Failed to delete user");
+    }
+  };
+
+  const handleDeleteVendor = async (vendorId: string) => {
+    try {
+      const { error } = await supabase
+        .from("vendor_profiles")
+        .delete()
+        .eq("id", vendorId);
+
+      if (error) throw error;
+
+      toast.success("Vendor deleted successfully");
+      setDeleteDialog({ open: false, id: '', type: 'vendor' });
+      await Promise.all([fetchStats(), fetchVendors()]);
+    } catch (error) {
+      console.error("Error deleting vendor:", error);
+      toast.error("Failed to delete vendor");
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -121,14 +219,14 @@ const AdminDashboard = () => {
 
       <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-3 sm:gap-4">
           <Card className="hover:shadow-lg transition-shadow">
             <CardHeader className="p-3 sm:p-4 pb-2">
               <CardDescription className="text-xs sm:text-sm">Total Users</CardDescription>
               <CardTitle className="text-2xl sm:text-3xl">{stats.users}</CardTitle>
             </CardHeader>
             <CardContent className="p-3 sm:p-4 pt-0">
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <Users className="h-4 w-4 text-blue-500" />
             </CardContent>
           </Card>
           <Card className="hover:shadow-lg transition-shadow">
@@ -137,7 +235,7 @@ const AdminDashboard = () => {
               <CardTitle className="text-2xl sm:text-3xl">{stats.vendors}</CardTitle>
             </CardHeader>
             <CardContent className="p-3 sm:p-4 pt-0">
-              <Briefcase className="h-4 w-4 text-muted-foreground" />
+              <Briefcase className="h-4 w-4 text-purple-500" />
             </CardContent>
           </Card>
           <Card className="hover:shadow-lg transition-shadow">
@@ -146,7 +244,7 @@ const AdminDashboard = () => {
               <CardTitle className="text-2xl sm:text-3xl">{stats.services}</CardTitle>
             </CardHeader>
             <CardContent className="p-3 sm:p-4 pt-0">
-              <Activity className="h-4 w-4 text-muted-foreground" />
+              <Activity className="h-4 w-4 text-green-500" />
             </CardContent>
           </Card>
           <Card className="hover:shadow-lg transition-shadow">
@@ -155,7 +253,25 @@ const AdminDashboard = () => {
               <CardTitle className="text-2xl sm:text-3xl">{stats.events}</CardTitle>
             </CardHeader>
             <CardContent className="p-3 sm:p-4 pt-0">
-              <Activity className="h-4 w-4 text-muted-foreground" />
+              <MapPin className="h-4 w-4 text-orange-500" />
+            </CardContent>
+          </Card>
+          <Card className="hover:shadow-lg transition-shadow border-yellow-200 bg-yellow-50/50">
+            <CardHeader className="p-3 sm:p-4 pb-2">
+              <CardDescription className="text-xs sm:text-sm">Pending Approvals</CardDescription>
+              <CardTitle className="text-2xl sm:text-3xl">{stats.pendingVendors}</CardTitle>
+            </CardHeader>
+            <CardContent className="p-3 sm:p-4 pt-0">
+              <AlertTriangle className="h-4 w-4 text-yellow-600" />
+            </CardContent>
+          </Card>
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader className="p-3 sm:p-4 pb-2">
+              <CardDescription className="text-xs sm:text-sm">Revenue</CardDescription>
+              <CardTitle className="text-2xl sm:text-3xl">₦{stats.revenue.toLocaleString()}</CardTitle>
+            </CardHeader>
+            <CardContent className="p-3 sm:p-4 pt-0">
+              <TrendingUp className="h-4 w-4 text-emerald-500" />
             </CardContent>
           </Card>
         </div>
@@ -194,11 +310,29 @@ const AdminDashboard = () => {
                             <CardTitle className="text-base sm:text-lg truncate">{user.full_name || 'Unnamed User'}</CardTitle>
                             <CardDescription className="text-xs sm:text-sm truncate">{user.phone || 'No phone'}</CardDescription>
                           </div>
-                          {user.created_at && (
-                            <Badge variant="secondary" className="text-xs whitespace-nowrap">
-                              {new Date(user.created_at).toLocaleDateString()}
-                            </Badge>
-                          )}
+                          <div className="flex items-center gap-2">
+                            {user.created_at && (
+                              <Badge variant="secondary" className="text-xs whitespace-nowrap hidden sm:inline-flex">
+                                {new Date(user.created_at).toLocaleDateString()}
+                              </Badge>
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => toast.info("View user details (Coming soon)")}
+                              className="min-h-[36px] min-w-[36px] p-0"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setDeleteDialog({ open: true, id: user.id || '', type: 'user' })}
+                              className="min-h-[36px] min-w-[36px] p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       </CardHeader>
                     </Card>
@@ -226,10 +360,58 @@ const AdminDashboard = () => {
                           <div className="flex-1 min-w-0">
                             <CardTitle className="text-base sm:text-lg truncate">{vendor.business_name || 'Unnamed Business'}</CardTitle>
                             <CardDescription className="text-xs sm:text-sm truncate">{vendor.category || 'Uncategorized'}</CardDescription>
+                            {vendor.created_at && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Joined {new Date(vendor.created_at).toLocaleDateString()}
+                              </p>
+                            )}
                           </div>
-                          <Badge variant={vendor.verification_status ? "default" : "secondary"} className="text-xs whitespace-nowrap">
-                            {vendor.verification_status ? "Verified" : "Pending"}
-                          </Badge>
+                          <div className="flex items-center gap-2">
+                            <Badge variant={vendor.verification_status ? "default" : "secondary"} className="text-xs whitespace-nowrap">
+                              {vendor.verification_status ? "Verified" : "Pending"}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 mt-3 flex-wrap">
+                          {!vendor.verification_status && (
+                            <Button
+                              size="sm"
+                              onClick={() => handleVerifyVendor(vendor.id || '')}
+                              className="min-h-[36px] text-xs"
+                            >
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Verify
+                            </Button>
+                          )}
+                          {vendor.verification_status && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleUnverifyVendor(vendor.id || '')}
+                              className="min-h-[36px] text-xs"
+                            >
+                              <XCircle className="h-3 w-3 mr-1" />
+                              Unverify
+                            </Button>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => toast.info("View vendor details (Coming soon)")}
+                            className="min-h-[36px] text-xs"
+                          >
+                            <Eye className="h-3 w-3 mr-1" />
+                            View
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setDeleteDialog({ open: true, id: vendor.id || '', type: 'vendor' })}
+                            className="min-h-[36px] text-xs text-red-500 hover:text-red-700 hover:bg-red-50 border-red-200"
+                          >
+                            <Trash2 className="h-3 w-3 mr-1" />
+                            Delete
+                          </Button>
                         </div>
                       </CardHeader>
                     </Card>
@@ -240,6 +422,33 @@ const AdminDashboard = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialog.open} onOpenChange={(open) => setDeleteDialog({ ...deleteDialog, open })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete this {deleteDialog.type} and all associated data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (deleteDialog.type === 'user') {
+                  handleDeleteUser(deleteDialog.id);
+                } else {
+                  handleDeleteVendor(deleteDialog.id);
+                }
+              }}
+              className="bg-red-500 hover:bg-red-600"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
