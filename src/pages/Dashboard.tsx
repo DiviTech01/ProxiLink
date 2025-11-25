@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import MapWrapper from "@/components/MapWrapper";
 import NotificationBell from '@/components/NotificationBell';
@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const routerLocation = useLocation();
   const { location, requestLocation, error: geoError } = useGeolocation();
   const { subscribed, loading: pushLoading, subscribeToPushNotifications, unsubscribeFromPushNotifications } = usePushNotifications();
   type Profile = { id?: string; business_name?: string; location_lat?: number; location_lng?: number };
@@ -24,6 +25,7 @@ const Dashboard = () => {
   const [services, setServices] = useState<ServiceItem[]>([]);
   const [showProximityAlert, setShowProximityAlert] = useState(false);
   const [nearbyProvider, setNearbyProvider] = useState<ServiceItem | null>(null);
+  const [shouldExpandProviders, setShouldExpandProviders] = useState(false);
 
   const fetchUserData = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -46,6 +48,13 @@ const Dashboard = () => {
   useEffect(() => {
     fetchUserData();
 
+    // Check if we should expand providers list from navigation state
+    if (routerLocation.state?.expandProviders) {
+      setShouldExpandProviders(true);
+      // Clear the state to avoid re-expanding on refresh
+      window.history.replaceState({}, document.title);
+    }
+
     // Request location permission on dashboard load
     const timer = setTimeout(() => {
       if (!location) {
@@ -54,7 +63,7 @@ const Dashboard = () => {
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [fetchUserData, location, requestLocation]);
+  }, [fetchUserData, location, requestLocation, routerLocation.state]);
 
   // Simulate proximity alert for demo (in production, use geolocation)
   useEffect(() => {
@@ -166,7 +175,11 @@ const Dashboard = () => {
       )}
 
       {/* Service Provider List - Bottom Sheet */}
-      <ServiceProviderList services={services} />
+      <ServiceProviderList 
+        services={services} 
+        initialExpanded={shouldExpandProviders}
+        onExpandChange={() => setShouldExpandProviders(false)}
+      />
     </div>
   );
 };

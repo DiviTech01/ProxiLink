@@ -76,7 +76,20 @@ const NotificationCenter: React.FC<{ onClose?: () => void }> = ({ onClose }) => 
                       variant="default"
                       className="text-xs h-8"
                       onClick={() => { 
-                        navigate('/services'); 
+                        navigate('/dashboard', { state: { expandProviders: true } }); 
+                        if (onClose) onClose(); 
+                      }}
+                    >
+                      View Services
+                    </Button>
+                  )}
+                  {(n.notification_type === 'promotion' || n.notification_type === 'special-offer') && (
+                    <Button 
+                      size="sm" 
+                      variant="default"
+                      className="text-xs h-8"
+                      onClick={() => { 
+                        navigate('/dashboard', { state: { expandProviders: true } }); 
                         if (onClose) onClose(); 
                       }}
                     >

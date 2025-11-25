@@ -31,11 +31,13 @@ type BaseItem = {
 
 interface ServiceProviderListProps {
   services: BaseItem[];
+  initialExpanded?: boolean;
+  onExpandChange?: () => void;
 }
 
-const ServiceProviderList = ({ services }: ServiceProviderListProps) => {
+const ServiceProviderList = ({ services, initialExpanded = false, onExpandChange }: ServiceProviderListProps) => {
   const navigate = useNavigate();
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(initialExpanded);
   const [fullyExpanded, setFullyExpanded] = useState(false);
   const [selectedItem, setSelectedItem] = useState<BaseItem | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -45,6 +47,17 @@ const ServiceProviderList = ({ services }: ServiceProviderListProps) => {
   const touchStartY = useRef<number>(0);
   const touchCurrentY = useRef<number>(0);
   const isDragging = useRef<boolean>(false);
+
+  // Effect to handle initial expansion
+  useEffect(() => {
+    if (initialExpanded && !isExpanded) {
+      setIsExpanded(true);
+      setFullyExpanded(true);
+      if (onExpandChange) {
+        onExpandChange();
+      }
+    }
+  }, [initialExpanded, isExpanded, onExpandChange]);
 
   const useDemo = import.meta.env.VITE_USE_DEMO_VENDORS === 'true';
 
