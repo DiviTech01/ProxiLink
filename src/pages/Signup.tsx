@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { MapPin, AlertCircle } from "lucide-react";
+import { MapPin, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Signup = () => {
@@ -17,6 +17,15 @@ const Signup = () => {
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showPassword, setShowPassword] = useState(false);
+
+  // Password strength indicators
+  const passwordRequirements = [
+    { test: (pwd: string) => pwd.length >= 6, label: "At least 6 characters" },
+    { test: (pwd: string) => /[a-z]/.test(pwd), label: "One lowercase letter" },
+    { test: (pwd: string) => /[A-Z]/.test(pwd), label: "One uppercase letter" },
+    { test: (pwd: string) => /[0-9]/.test(pwd), label: "One number" },
+  ];
 
   // Validation function
   const validateForm = (): boolean => {
@@ -93,8 +102,10 @@ const Signup = () => {
       if (authData.user) {
         // Check if email confirmation is required
         if (authData.session === null) {
-          toast.success("Please check your email to verify your account");
-          navigate("/login");
+          toast.success("Sign up successful! Please check your email to verify your account");
+          setTimeout(() => {
+            navigate("/login");
+          }, 2000);
           return;
         }
 
@@ -115,10 +126,12 @@ const Signup = () => {
 
         if (roleError) throw roleError;
 
-        toast.success("Account created successfully! Welcome to ProxiLink!");
+        toast.success("Sign up successful! Redirecting to login...");
         // Welcome notification is handled server-side by a DB trigger (supabase migration)
         
-        navigate("/dashboard");
+        setTimeout(() => {
+          navigate("/login");
+        }, 2000);
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -208,17 +221,53 @@ const Signup = () => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  if (errors.password) setErrors({ ...errors, password: "" });
-                }}
-                aria-invalid={!!errors.password}
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (errors.password) setErrors({ ...errors, password: "" });
+                  }}
+                  aria-invalid={!!errors.password}
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              
+              {/* Password strength indicators */}
+              {password && (
+                <div className="space-y-2 mt-2 p-3 bg-muted/50 rounded-md">
+                  <p className="text-xs font-medium text-muted-foreground">Password must contain:</p>
+                  <div className="space-y-1">
+                    {passwordRequirements.map((req, index) => {
+                      const isMet = req.test(password);
+                      return (
+                        <div key={index} className="flex items-center gap-2 text-xs">
+                          <div className={`w-4 h-4 rounded-full flex items-center justify-center ${
+                            isMet ? "bg-green-500" : "bg-muted"
+                          }`}>
+                            {isMet && <span className="text-white text-[10px]">✓</span>}
+                          </div>
+                          <span className={isMet ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}>
+                            {req.label}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {errors.password && (
                 <Alert className="bg-destructive/10 border-destructive/30">
                   <AlertCircle className="h-4 w-4 text-destructive" />
