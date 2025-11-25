@@ -1,8 +1,10 @@
-# Welcome to your Lovable project
+# ProxiLink - Connect to Opportunities Around You
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/daa2e123-3e63-4708-ba8f-cef7439182d9
+ProxiLink is a proximity-based digital ecosystem empowering African youth, MSMEs, and NGOs through location-based connections.
+
+**Repository**: https://github.com/DiviTech01/ProxiLink
 
 ## How can I edit this code?
 
@@ -24,10 +26,10 @@ Follow these steps:
 
 ```sh
 # Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+git clone https://github.com/DiviTech01/ProxiLink.git
 
 # Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+cd ProxiLink
 
 # Step 3: Install the necessary dependencies.
 npm i
@@ -64,10 +66,8 @@ This project is built with:
 
 Simply open [Lovable](https://lovable.dev/projects/daa2e123-3e63-4708-ba8f-cef7439182d9) and click on Share -> Publish.
 
-## Can I connect a custom domain to my Lovable project?
+## Deployment
 
-Yes, you can!
+This project is deployed on Vercel. Any push to the main branch will automatically trigger a new deployment.
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+**Live URL**: Check your Vercel dashboard for the production URL.
