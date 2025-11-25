@@ -93,9 +93,9 @@ export function useNotifications() {
       clearInterval(demoTimerRef.current);
     }
 
-    // Generate a new notification every 35-55 seconds
+    // Generate a new notification every 50 seconds
     const scheduleNextNotification = () => {
-      const delay = Math.floor(Math.random() * 20000) + 35000; // 35-55 seconds
+      const delay = 50000; // 50 seconds
       
       demoTimerRef.current = setTimeout(() => {
         const nextNotification = incomingDemoNotifications[notificationIndexRef.current % incomingDemoNotifications.length];
