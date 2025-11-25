@@ -22,6 +22,8 @@ export function useNotifications() {
   const demoTimerRef = useRef<NodeJS.Timeout | null>(null);
   const toastContainerRef = useRef<HTMLDivElement | null>(null);
   const toastRootRef = useRef<any>(null);
+  const hasShownWelcomeRef = useRef(false);
+  const hasShownSpecialOfferRef = useRef(false);
 
   // Function to show custom toast
   const showNotificationToast = useCallback((title: string, content: string, onClick?: () => void) => {
@@ -52,8 +54,7 @@ export function useNotifications() {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session?.user) {
-        // Use demo notifications for non-authenticated users
-        setNotifications([...demoNotifications]);
+        setNotifications([]);
         setLoading(false);
         return;
       }
@@ -67,62 +68,57 @@ export function useNotifications() {
 
       if (error) {
         console.error('Error fetching notifications:', error);
-        // Fallback to demo notifications
-        setNotifications([...demoNotifications]);
+        setNotifications([]);
       } else {
-        // Mix real and demo notifications
-        const allNotifications = [...(data as NotificationRow[])];
-        if (allNotifications.length === 0) {
-          setNotifications([...demoNotifications]);
-        } else {
-          setNotifications(allNotifications);
-        }
+        setNotifications(data as NotificationRow[] || []);
       }
     } catch (err) {
       console.error('Failed to fetch notifications', err);
-      setNotifications([...demoNotifications]);
+      setNotifications([]);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // Simulate incoming demo notifications
-  const startDemoNotifications = useCallback(() => {
+  // Show special offer notification after 50 seconds (only once per session)
+  const startSpecialOfferNotification = useCallback(() => {
     // Clear any existing timer
     if (demoTimerRef.current) {
-      clearInterval(demoTimerRef.current);
+      clearTimeout(demoTimerRef.current);
     }
 
-    // Generate a new notification every 50 seconds
-    const scheduleNextNotification = () => {
-      const delay = 50000; // 50 seconds
+    // Only show if not already shown
+    if (hasShownSpecialOfferRef.current) {
+      return;
+    }
+
+    // Show special offer after 50 seconds
+    demoTimerRef.current = setTimeout(() => {
+      if (hasShownSpecialOfferRef.current) return;
       
-      demoTimerRef.current = setTimeout(() => {
-        const nextNotification = incomingDemoNotifications[notificationIndexRef.current % incomingDemoNotifications.length];
-        const newNotification: NotificationRow = {
-          ...nextNotification,
-          id: `demo-incoming-${Date.now()}`,
-          created_at: new Date().toISOString(),
-        };
+      const specialOfferNotification: NotificationRow = {
+        id: `special-offer-${Date.now()}`,
+        user_id: 'current',
+        title: '🎉 Special Offer!',
+        content: 'Get exclusive discounts on premium services today. Check out our latest deals and save up to 30%!',
+        notification_type: 'promotion',
+        is_read: false,
+        created_at: new Date().toISOString(),
+      };
 
-        setNotifications((prev) => [newNotification, ...prev]);
-        showNotificationToast(
-          newNotification.title, 
-          newNotification.content,
-          () => {
-            // Open notification center when clicked
-            const event = new CustomEvent('openNotificationCenter');
-            window.dispatchEvent(event);
-          }
-        );
-
-        notificationIndexRef.current += 1;
-        scheduleNextNotification(); // Schedule the next one
-      }, delay);
-    };
-
-    scheduleNextNotification();
-  }, []);
+      setNotifications((prev) => [specialOfferNotification, ...prev]);
+      showNotificationToast(
+        specialOfferNotification.title, 
+        specialOfferNotification.content,
+        () => {
+          const event = new CustomEvent('openNotificationCenter');
+          window.dispatchEvent(event);
+        }
+      );
+      
+      hasShownSpecialOfferRef.current = true;
+    }, 50000); // 50 seconds
+  }, [showNotificationToast]);
 
   useEffect(() => {
     let mounted = true;
@@ -136,31 +132,32 @@ export function useNotifications() {
 
         if (!session?.user) {
           setLoading(false);
-          // Start demo notifications for non-authenticated users
-          startDemoNotifications();
           return;
         }
         const userId = session.user.id;
 
-        // Show welcome notification immediately on login
-        const welcomeNotification: NotificationRow = {
-          id: `welcome-${Date.now()}`,
-          user_id: userId,
-          title: '🎉 Special ProxiLink Offers!',
-          content: 'Get exclusive discounts on premium services today. Check out our latest deals and save up to 30%!',
-          notification_type: 'promotion',
-          is_read: false,
-          created_at: new Date().toISOString(),
-        };
-        setNotifications((prev) => [welcomeNotification, ...prev]);
-        showNotificationToast(
-          welcomeNotification.title,
-          welcomeNotification.content,
-          () => {
-            const event = new CustomEvent('openNotificationCenter');
-            window.dispatchEvent(event);
-          }
-        );
+        // Show welcome notification immediately on login (only once per session)
+        if (!hasShownWelcomeRef.current) {
+          const welcomeNotification: NotificationRow = {
+            id: `welcome-${Date.now()}`,
+            user_id: userId,
+            title: '👋 Welcome to ProxiLink!',
+            content: 'Discover amazing services and vendors near you. Start exploring now!',
+            notification_type: 'welcome',
+            is_read: false,
+            created_at: new Date().toISOString(),
+          };
+          setNotifications((prev) => [welcomeNotification, ...prev]);
+          showNotificationToast(
+            welcomeNotification.title,
+            welcomeNotification.content,
+            () => {
+              const event = new CustomEvent('openNotificationCenter');
+              window.dispatchEvent(event);
+            }
+          );
+          hasShownWelcomeRef.current = true;
+        }
 
         // Use Supabase v2 Realtime `channel` API to subscribe to notifications for the user
         const channel = supabase
@@ -184,8 +181,8 @@ export function useNotifications() {
           )
           .subscribe();
 
-        // Also start demo notifications for authenticated users (fallback)
-        startDemoNotifications();
+        // Schedule special offer notification after 50 seconds
+        startSpecialOfferNotification();
 
         cleanupFn = () => {
           mounted = false;
@@ -210,8 +207,6 @@ export function useNotifications() {
       } catch (e) {
         console.error('useNotifications setup failed', e);
         setLoading(false);
-        // Start demo notifications on error
-        startDemoNotifications();
       }
     })();
 
@@ -230,14 +225,14 @@ export function useNotifications() {
       }
       if (typeof cleanupFn === 'function') cleanupFn();
     };
-  }, [fetchNotifications, startDemoNotifications, showNotificationToast]);
+  }, [fetchNotifications, startSpecialOfferNotification, showNotificationToast]);
 
   const markAsRead = async (id: string) => {
     // Optimistically update UI
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, is_read: true } : n)));
     
-    // Don't attempt database update for demo notifications
-    if (id.startsWith('demo')) {
+    // Don't attempt database update for session-based notifications
+    if (id.startsWith('welcome-') || id.startsWith('special-offer-')) {
       return;
     }
 
@@ -258,32 +253,39 @@ export function useNotifications() {
   };
 
   const markAllRead = async () => {
-    const unreadNonDemo = notifications.filter((n) => !n.is_read && !n.id.startsWith('demo'));
-    const unreadIds = unreadNonDemo.map((n) => n.id);
+    // Separate session-based notifications from database notifications
+    const unreadSessionNotifications = notifications.filter(
+      (n) => !n.is_read && (n.id.startsWith('welcome-') || n.id.startsWith('special-offer-'))
+    );
+    const unreadDbNotifications = notifications.filter(
+      (n) => !n.is_read && !n.id.startsWith('welcome-') && !n.id.startsWith('special-offer-')
+    );
+    const unreadDbIds = unreadDbNotifications.map((n) => n.id);
     
-    // Optimistically update UI
+    // Optimistically update UI - mark ALL notifications as read
     setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
 
-    if (unreadIds.length === 0) return;
-
-    try {
-      const { error } = await supabase
-        .from('notifications')
-        .update({ is_read: true })
-        .in('id', unreadIds);
-      
-      if (error) {
-        console.error('Failed to mark all as read:', error);
-        // Revert optimistic update on error
-        setNotifications((prev) => 
-          prev.map((n) => {
-            const wasUnread = unreadIds.includes(n.id);
-            return wasUnread ? { ...n, is_read: false } : n;
-          })
-        );
+    // Update database notifications
+    if (unreadDbIds.length > 0) {
+      try {
+        const { error } = await supabase
+          .from('notifications')
+          .update({ is_read: true })
+          .in('id', unreadDbIds);
+        
+        if (error) {
+          console.error('Failed to mark all as read:', error);
+          // Revert optimistic update on error for DB notifications only
+          setNotifications((prev) => 
+            prev.map((n) => {
+              const wasUnread = unreadDbIds.includes(n.id);
+              return wasUnread ? { ...n, is_read: false } : n;
+            })
+          );
+        }
+      } catch (e) {
+        console.error('Failed to mark all read', e);
       }
-    } catch (e) {
-      console.error('Failed to mark all read', e);
     }
   };
 
