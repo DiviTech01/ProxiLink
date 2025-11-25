@@ -61,19 +61,21 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
 
   const checkRole = async (userId: string) => {
     try {
-      const { data: roleData } = await supabase
+      const { data: rolesData } = await supabase
         .from("user_roles")
         .select("role")
-        .eq("user_id", userId)
-        .single();
+        .eq("user_id", userId);
 
-      if (roleData) {
-        const userRole = roleData.role;
+      if (rolesData && rolesData.length > 0) {
+        const userRoles = rolesData.map(r => r.role);
         const allowedRoles = Array.isArray(requiredRole)
           ? requiredRole
           : [requiredRole];
 
-        if (requiredRole && !allowedRoles.includes(userRole)) {
+        // Check if user has any of the required roles
+        const hasRole = userRoles.some(role => allowedRoles.includes(role));
+
+        if (requiredRole && !hasRole) {
           setHasRequiredRole(false);
           toast.error("You don't have permission to access this page");
         } else {

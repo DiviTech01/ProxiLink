@@ -66,19 +66,21 @@ const Login = () => {
           localStorage.removeItem("userEmail");
         }
 
-        // Fetch user role to determine redirect
+        // Fetch user roles to determine redirect (user can have multiple roles)
         const { data: roles } = await supabase
           .from("user_roles")
           .select("role")
-          .eq("user_id", data.user.id)
-          .single();
+          .eq("user_id", data.user.id);
 
         toast.success("Welcome back!");
         
-        // Redirect based on role
-        if (roles?.role === "admin") {
+        // Get all roles and prioritize admin > vendor > user
+        const userRoles = roles?.map(r => r.role) || [];
+        
+        // Redirect based on highest priority role
+        if (userRoles.includes("admin")) {
           navigate("/admin/dashboard");
-        } else if (roles?.role === "vendor") {
+        } else if (userRoles.includes("vendor")) {
           navigate("/vendor/dashboard");
         } else {
           navigate("/dashboard");

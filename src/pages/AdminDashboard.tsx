@@ -8,7 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   Users, Briefcase, Activity, LogOut, Shield, CheckCircle, XCircle, 
-  Trash2, MapPin, DollarSign, TrendingUp, AlertTriangle, Eye, Ban 
+  Trash2, MapPin, DollarSign, TrendingUp, AlertTriangle, Eye, Ban,
+  BarChart3, PieChart, LineChart 
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -21,11 +22,27 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  PieChart as RechartsPie,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer
+} from "recharts";
+import { GoogleMap, LoadScript, Marker, InfoWindow } from "@react-google-maps/api";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  type UserProfile = { id?: string; full_name?: string; phone?: string; created_at?: string };
-  type VendorProfile = { id?: string; business_name?: string; category?: string; verification_status?: boolean; created_at?: string };
+  type UserProfile = { id?: string; full_name?: string; phone?: string; created_at?: string; location_lat?: number; location_lng?: number };
+  type VendorProfile = { id?: string; business_name?: string; category?: string; verification_status?: boolean; created_at?: string; user_id?: string };
 
   const [stats, setStats] = useState({ 
     users: 0, 
@@ -43,6 +60,12 @@ const AdminDashboard = () => {
     id: '', 
     type: 'user' 
   });
+  const [chartData, setChartData] = useState<any[]>([]);
+  const [vendorCategoryData, setVendorCategoryData] = useState<any[]>([]);
+  const [selectedMarker, setSelectedMarker] = useState<string | null>(null);
+
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
+  const GOOGLE_MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "";
 
   const checkAdminAccess = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -100,14 +123,54 @@ const AdminDashboard = () => {
     setVendors(data || []);
   }, []);
 
+  const fetchAnalyticsData = useCallback(async () => {
+    // Fetch user growth data (last 7 days)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    const { data: recentUsers } = await supabase
+      .from("profiles")
+      .select("created_at")
+      .gte("created_at", sevenDaysAgo.toISOString());
+
+    // Group by day
+    const growthData = Array.from({ length: 7 }, (_, i) => {
+      const date = new Date();
+      date.setDate(date.getDate() - (6 - i));
+      const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const count = recentUsers?.filter(u => 
+        new Date(u.created_at!).toDateString() === date.toDateString()
+      ).length || 0;
+      return { date: dateStr, users: count };
+    });
+    setChartData(growthData);
+
+    // Fetch vendor categories
+    const { data: allVendors } = await supabase
+      .from("vendor_profiles")
+      .select("category");
+
+    const categoryMap = new Map<string, number>();
+    allVendors?.forEach(v => {
+      const cat = v.category || 'Other';
+      categoryMap.set(cat, (categoryMap.get(cat) || 0) + 1);
+    });
+
+    const catData = Array.from(categoryMap.entries()).map(([name, value]) => ({
+      name,
+      value
+    }));
+    setVendorCategoryData(catData);
+  }, []);
+
   useEffect(() => {
     const initialize = async () => {
       await checkAdminAccess();
-      await Promise.all([fetchStats(), fetchUsers(), fetchVendors()]);
+      await Promise.all([fetchStats(), fetchUsers(), fetchVendors(), fetchAnalyticsData()]);
       setLoading(false);
     };
     initialize();
-  }, [checkAdminAccess, fetchStats, fetchUsers, fetchVendors]);
+  }, [checkAdminAccess, fetchStats, fetchUsers, fetchVendors, fetchAnalyticsData]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -278,7 +341,7 @@ const AdminDashboard = () => {
 
         {/* Data Tables */}
         <Tabs defaultValue="users" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 h-auto">
+          <TabsList className="grid w-full grid-cols-3 h-auto">
             <TabsTrigger value="users" className="min-h-[44px] text-sm sm:text-base">
               <Users className="h-4 w-4 mr-2" />
               <span className="hidden sm:inline">Users</span>
@@ -288,6 +351,11 @@ const AdminDashboard = () => {
               <Briefcase className="h-4 w-4 mr-2" />
               <span className="hidden sm:inline">Vendors</span>
               <span className="sm:hidden">Vendors</span>
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="min-h-[44px] text-sm sm:text-base">
+              <BarChart3 className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Analytics</span>
+              <span className="sm:hidden">Analytics</span>
             </TabsTrigger>
           </TabsList>
 
@@ -419,6 +487,99 @@ const AdminDashboard = () => {
                 )}
               </div>
             </ScrollArea>
+          </TabsContent>
+
+          <TabsContent value="analytics" className="space-y-4 mt-6">
+            {/* User Growth Chart */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <LineChart className="h-5 w-5" />
+                  User Growth (Last 7 Days)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <AreaChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" />
+                    <YAxis />
+                    <Tooltip />
+                    <Area type="monotone" dataKey="users" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            {/* Vendor Categories Chart */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <PieChart className="h-5 w-5" />
+                  Vendors by Category
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <RechartsPie>
+                    <Pie
+                      data={vendorCategoryData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                      outerRadius={100}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {vendorCategoryData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </RechartsPie>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            {/* User Locations Map */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5" />
+                  User Locations
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[400px] w-full rounded-lg overflow-hidden">
+                  <LoadScript googleMapsApiKey={GOOGLE_MAPS_KEY}>
+                    <GoogleMap
+                      mapContainerStyle={{ width: '100%', height: '100%' }}
+                      center={{ lat: 6.5244, lng: 3.3792 }} // Lagos, Nigeria
+                      zoom={11}
+                    >
+                      {users.filter(u => u.location_lat && u.location_lng).map((user) => (
+                        <Marker
+                          key={user.id}
+                          position={{ lat: user.location_lat!, lng: user.location_lng! }}
+                          onClick={() => setSelectedMarker(user.id || null)}
+                        >
+                          {selectedMarker === user.id && (
+                            <InfoWindow onCloseClick={() => setSelectedMarker(null)}>
+                              <div>
+                                <h3 className="font-bold">{user.full_name || 'User'}</h3>
+                                <p className="text-sm text-muted-foreground">{user.phone}</p>
+                              </div>
+                            </InfoWindow>
+                          )}
+                        </Marker>
+                      ))}
+                    </GoogleMap>
+                  </LoadScript>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>

@@ -119,7 +119,7 @@ ON CONFLICT (user_id, role) DO NOTHING;
 INSERT INTO user_roles (user_id, role)
 SELECT id, 'admin'::app_role
 FROM auth.users
-WHERE email = 'divineokonitu01@gmail.com'  -- ⚠️ CHANGE THIS TO YOUR EMAIL!
+WHERE email = 'd.itu@alustudent.com'  -- ⚠️ CHANGE THIS TO YOUR EMAIL!
 ON CONFLICT (user_id, role) DO NOTHING;
 
 -- Step 13: Verify setup
