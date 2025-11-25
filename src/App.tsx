@@ -24,6 +24,10 @@ const ApiKeyDiagnostic = lazy(() => import("./pages/ApiKeyDiagnostic"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const ServiceProfile = lazy(() => import("./pages/ServiceProfile"));
 const Profile = lazy(() => import("./pages/Profile"));
+const ChangePassword = lazy(() => import("./pages/ChangePassword"));
+const PrivacySettings = lazy(() => import("./pages/PrivacySettings"));
+const NotificationPreferences = lazy(() => import("./pages/NotificationPreferences"));
+const DeleteAccount = lazy(() => import("./pages/DeleteAccount"));
 const Payments = lazy(() => import("./pages/Payments"));
 const Orders = lazy(() => import("./pages/Orders"));
 const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
@@ -66,6 +70,10 @@ const App = () => (
             <Route path="/services" element={<ServiceList />} />
             <Route path="/service/create" element={<ProtectedRoute requiredRole="vendor"><ServiceCreate /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/profile/change-password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />
+            <Route path="/profile/privacy" element={<ProtectedRoute><PrivacySettings /></ProtectedRoute>} />
+            <Route path="/profile/notifications" element={<ProtectedRoute><NotificationPreferences /></ProtectedRoute>} />
+            <Route path="/profile/delete-account" element={<ProtectedRoute><DeleteAccount /></ProtectedRoute>} />
             <Route path="/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
             <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
             <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />

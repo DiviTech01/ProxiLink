@@ -426,16 +426,32 @@ const Profile = () => {
             <CardTitle className="text-lg sm:text-xl">Account Settings</CardTitle>
           </CardHeader>
           <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6 space-y-3">
-            <Button variant="outline" className="w-full min-h-[44px] justify-start text-sm sm:text-base">
+            <Button 
+              variant="outline" 
+              className="w-full min-h-[44px] justify-start text-sm sm:text-base"
+              onClick={() => navigate('/profile/change-password')}
+            >
               Change Password
             </Button>
-            <Button variant="outline" className="w-full min-h-[44px] justify-start text-sm sm:text-base">
+            <Button 
+              variant="outline" 
+              className="w-full min-h-[44px] justify-start text-sm sm:text-base"
+              onClick={() => navigate('/profile/privacy')}
+            >
               Privacy Settings
             </Button>
-            <Button variant="outline" className="w-full min-h-[44px] justify-start text-sm sm:text-base">
+            <Button 
+              variant="outline" 
+              className="w-full min-h-[44px] justify-start text-sm sm:text-base"
+              onClick={() => navigate('/profile/notifications')}
+            >
               Notification Preferences
             </Button>
-            <Button variant="destructive" className="w-full min-h-[44px] justify-start text-sm sm:text-base">
+            <Button 
+              variant="destructive" 
+              className="w-full min-h-[44px] justify-start text-sm sm:text-base"
+              onClick={() => navigate('/profile/delete-account')}
+            >
               Delete Account
             </Button>
           </CardContent>
