@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import NotificationBell from '@/components/NotificationBell';
 import { usePushNotifications } from "@/hooks/usePushNotifications";
-import Map from "@/components/Map";
+import GoogleMapView from "@/components/GoogleMapView";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,7 +21,7 @@ const VendorDashboard = () => {
   type VendorService = { id?: string; title?: string; description?: string; status?: string; service_type?: string; price?: number; category?: string };
   const [services, setServices] = useState<VendorService[]>([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
-  type VendorProfile = { id?: string; business_name?: string; location_lat?: number; location_lng?: number; category?: string };
+  type VendorProfile = { id?: string; business_name?: string; location_lat?: number; location_lng?: number; category?: string; is_active?: boolean };
   const [vendorProfile, setVendorProfile] = useState<VendorProfile | null>(null);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'services' | 'map'>('dashboard');
 
@@ -165,6 +165,24 @@ const VendorDashboard = () => {
     navigate("/login");
   };
 
+  const handleToggleActiveStatus = async () => {
+    if (!vendorProfile?.id) return;
+    
+    const newActiveStatus = !vendorProfile.is_active;
+    
+    const { error } = await supabase
+      .from("vendor_profiles")
+      .update({ is_active: newActiveStatus })
+      .eq("id", vendorProfile.id);
+    
+    if (error) {
+      toast.error("Failed to update status");
+    } else {
+      setVendorProfile({ ...vendorProfile, is_active: newActiveStatus });
+      toast.success(`Status updated to ${newActiveStatus ? 'Active' : 'Inactive'}`);
+    }
+  };
+
   const handleToggleStatus = async (serviceId: string, currentStatus: string) => {
     const newStatus = currentStatus === "active" ? "inactive" : "active";
     try {
@@ -236,7 +254,12 @@ const VendorDashboard = () => {
             <NotificationBell />
             <div className="flex items-center gap-2 px-3 py-1 bg-muted rounded-md">
               <span className="text-sm font-medium hidden sm:inline">Status:</span>
-              <Badge variant={vendorProfile?.is_active ? "default" : "secondary"} className="gap-1">
+              <Badge 
+                variant={vendorProfile?.is_active ? "default" : "secondary"} 
+                className="gap-1 cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={handleToggleActiveStatus}
+                title="Click to toggle status"
+              >
                 <div className={`w-2 h-2 rounded-full ${vendorProfile?.is_active ? 'bg-green-500' : 'bg-gray-400'}`} />
                 {vendorProfile?.is_active ? 'Active' : 'Inactive'}
               </Badge>
@@ -606,7 +629,7 @@ const VendorDashboard = () => {
                 <CardContent className="p-0">
                   {vendorLocation ? (
                     <div className="h-[500px] rounded-lg overflow-hidden">
-                      <Map userLocation={vendorLocation} />
+                      <GoogleMapView userLocation={vendorLocation} radiusKm={5} />
                     </div>
                   ) : (
                     <div className="h-[500px] flex items-center justify-center bg-muted/20">
