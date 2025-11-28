@@ -11,6 +11,58 @@ type DemoVendor = {
   };
 };
 
+type DemoService = {
+  id: string;
+  vendor_id: string;
+  title: string;
+  description: string;
+  category: string;
+  price: number;
+  status: string;
+  vendor_profiles?: {
+    business_name?: string;
+    location_lat?: number;
+    location_lng?: number;
+  };
+};
+
+/**
+ * Generate demo services from demo vendors
+ */
+export function generateDemoServices(vendors: DemoVendor[]): DemoService[] {
+  const serviceTemplates = [
+    { title: 'Fresh Delivery', desc: 'Daily fresh products from local sources', priceRange: [3, 8] },
+    { title: 'Quick Service', desc: 'Fast and reliable service at your doorstep', priceRange: [5, 15] },
+    { title: 'Professional Consultation', desc: 'Expert advice and consultation services', priceRange: [10, 30] },
+    { title: 'Repair & Maintenance', desc: 'Quality repair and maintenance services', priceRange: [15, 50] },
+    { title: 'Home Service', desc: 'Convenient home service available', priceRange: [8, 25] },
+  ];
+
+  const services: DemoService[] = [];
+  
+  vendors.forEach((vendor, index) => {
+    const template = serviceTemplates[index % serviceTemplates.length];
+    const price = template.priceRange[0] + Math.random() * (template.priceRange[1] - template.priceRange[0]);
+    
+    services.push({
+      id: `demo-service-${vendor.id}`,
+      vendor_id: vendor.id,
+      title: template.title,
+      description: template.desc,
+      category: vendor.category || 'general',
+      price: Math.round(price * 10) / 10,
+      status: 'active',
+      vendor_profiles: {
+        business_name: vendor.business_name,
+        location_lat: vendor.profiles?.location_lat,
+        location_lng: vendor.profiles?.location_lng,
+      }
+    });
+  });
+
+  return services;
+}
+
 /**
  * Generate demo vendors around a user's location
  * This creates nearby vendors within ~5km radius

@@ -8,6 +8,7 @@ import ServiceProviderList from "@/components/ServiceProviderList";
 import RadiusSlider from "@/components/RadiusSlider";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { generateNearbyDemoVendors, generateDemoServices } from "@/data/demoVendors";
 import { MapPin, Bell } from "lucide-react";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
@@ -45,7 +46,30 @@ const Dashboard = () => {
     setProfile(data);
   }, [navigate]);
   
-  
+  const fetchServices = useCallback(async () => {
+    const useDemoVendors = import.meta.env.VITE_USE_DEMO_VENDORS === 'true';
+    
+    if (useDemoVendors && location) {
+      // Generate demo vendors around user location
+      const demoVendors = generateNearbyDemoVendors(location.lat, location.lng, 12);
+      const demoServices = generateDemoServices(demoVendors);
+      setServices(demoServices);
+      return;
+    }
+
+    // Fetch real services from database
+    const { data } = await supabase
+      .from("services")
+      .select(`
+        *,
+        profiles(full_name, location_lat, location_lng),
+        vendor_profiles(business_name, location_lat, location_lng)
+      `)
+      .eq("status", "active")
+      .order("created_at", { ascending: false });
+
+    setServices(data || []);
+  }, [location]);
 
   useEffect(() => {
     fetchUserData();
@@ -66,6 +90,13 @@ const Dashboard = () => {
 
     return () => clearTimeout(timer);
   }, [fetchUserData, location, requestLocation, routerLocation.state]);
+
+  // Fetch services when location changes
+  useEffect(() => {
+    if (location) {
+      fetchServices();
+    }
+  }, [location, fetchServices]);
 
   // Simulate proximity alert for demo (in production, use geolocation)
   useEffect(() => {
@@ -103,20 +134,6 @@ const Dashboard = () => {
 
     updateLocationInDatabase();
   }, [location, profile]);
-
-  const fetchServices = useCallback(async () => {
-    const { data } = await supabase
-      .from("services")
-      .select(`
-        *,
-        profiles(full_name, location_lat, location_lng),
-        vendor_profiles(business_name, location_lat, location_lng)
-      `)
-      .eq("status", "active")
-      .order("created_at", { ascending: false });
-
-    setServices(data || []);
-  }, []);
 
   return (
     <div className="min-h-screen w-full bg-background">
