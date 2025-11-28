@@ -136,29 +136,45 @@ const Profile = () => {
           description: vendorData.description
         });
 
-      if (vendorError) throw vendorError;
+      if (vendorError) {
+        console.error('Vendor profile creation error:', vendorError);
+        throw new Error('Failed to create vendor profile: ' + vendorError.message);
+      }
 
-      // Assign vendor role
-      const { error: roleError } = await supabase
+      // Assign vendor role - check if user already has this role first
+      const { data: existingRole } = await supabase
         .from('user_roles')
-        .insert({
-          user_id: userId,
-          role: 'vendor'
-        });
+        .select('role')
+        .eq('user_id', userId)
+        .eq('role', 'vendor')
+        .maybeSingle();
 
-      if (roleError) throw roleError;
+      if (!existingRole) {
+        const { error: roleError } = await supabase
+          .from('user_roles')
+          .insert({
+            user_id: userId,
+            role: 'vendor'
+          });
+
+        if (roleError) {
+          console.error('Role assignment error:', roleError);
+          throw new Error('Failed to assign vendor role: ' + roleError.message);
+        }
+      }
 
       toast.success('Vendor profile created successfully!');
       setIsVendor(true);
       setVendorDialogOpen(false);
       
-      // send to vendor dashboard after a sec
+      // Wait a bit longer to ensure role is propagated
       setTimeout(() => {
         navigate('/vendor/dashboard');
-      }, 1500);
+      }, 2000);
     } catch (error) {
       console.error('Error creating vendor profile:', error);
-      toast.error('Failed to create vendor profile');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create vendor profile';
+      toast.error(errorMessage);
     } finally {
       setCreatingVendor(false);
     }

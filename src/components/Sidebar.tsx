@@ -65,27 +65,45 @@ const Sidebar: React.FC = () => {
           description: vendorData.description
         });
 
-      if (vendorError) throw vendorError;
+      if (vendorError) {
+        console.error('Vendor profile creation error:', vendorError);
+        throw new Error('Failed to create vendor profile: ' + vendorError.message);
+      }
 
-      const { error: roleError } = await supabase
+      // Assign vendor role - check if user already has this role first
+      const { data: existingRole } = await supabase
         .from('user_roles')
-        .insert({
-          user_id: user.id,
-          role: 'vendor'
-        });
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'vendor')
+        .maybeSingle();
 
-      if (roleError) throw roleError;
+      if (!existingRole) {
+        const { error: roleError } = await supabase
+          .from('user_roles')
+          .insert({
+            user_id: user.id,
+            role: 'vendor'
+          });
+
+        if (roleError) {
+          console.error('Role assignment error:', roleError);
+          throw new Error('Failed to assign vendor role: ' + roleError.message);
+        }
+      }
 
       toast.success('Vendor profile created successfully!');
       setIsVendor(true);
       setVendorDialogOpen(false);
       
+      // Wait a bit longer to ensure role is propagated
       setTimeout(() => {
         navigate('/vendor/dashboard');
-      }, 1500);
+      }, 2000);
     } catch (error) {
       console.error('Error creating vendor profile:', error);
-      toast.error('Failed to create vendor profile');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create vendor profile';
+      toast.error(errorMessage);
     } finally {
       setCreatingVendor(false);
     }
@@ -123,12 +141,20 @@ const Sidebar: React.FC = () => {
             <span>Profile</span>
           </Link>
 
-          {isVendor ? (
-            <Link to="/vendor/dashboard" className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted rounded text-sm">
-              <Store className="h-5 w-5 shrink-0" />
-              <span>Vendor Dashboard</span>
-            </Link>
-          ) : (
+          {isVendor && (
+            <>
+              <Link to="/dashboard" className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted rounded text-sm">
+                <User className="h-5 w-5 shrink-0" />
+                <span>User Dashboard</span>
+              </Link>
+              <Link to="/vendor/dashboard" className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted rounded text-sm">
+                <Store className="h-5 w-5 shrink-0" />
+                <span>Vendor Dashboard</span>
+              </Link>
+            </>
+          )}
+
+          {!isVendor && (
             <button 
               onClick={() => setVendorDialogOpen(true)}
               className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted rounded text-sm w-full text-left"

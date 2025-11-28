@@ -64,35 +64,35 @@ const VendorDashboard = () => {
       const { data: roleData, error: roleError } = await supabase
         .from("user_roles")
         .select("role")
-        .eq("user_id", session.user.id)
-        .single();
+        .eq("user_id", session.user.id);
 
-      // sometimes role takes time to show up for new users
-      if (!roleData && !roleError) {
-        // try again after waiting
-        await new Promise(resolve => setTimeout(resolve, 1000));
+      if (roleError) {
+        console.error("Role check error:", roleError);
+        toast.error("Error checking vendor access");
+        navigate("/dashboard");
+        setLoading(false);
+        return;
+      }
+
+      // Check if user has vendor role
+      const hasVendorRole = roleData?.some(r => r.role === "vendor");
+      
+      if (!hasVendorRole) {
+        // Wait a bit and try one more time (for newly created vendors)
+        await new Promise(resolve => setTimeout(resolve, 1500));
         const { data: roleData2 } = await supabase
           .from("user_roles")
           .select("role")
-          .eq("user_id", session.user.id)
-          .single();
+          .eq("user_id", session.user.id);
         
-        if (roleData2?.role !== "vendor") {
+        const hasVendorRole2 = roleData2?.some(r => r.role === "vendor");
+        
+        if (!hasVendorRole2) {
           toast.error("Access denied. Vendor role required.");
           navigate("/dashboard");
           setLoading(false);
           return;
         }
-      } else if (roleError) {
-        toast.error("Access denied. Vendor role required.");
-        navigate("/dashboard");
-        setLoading(false);
-        return;
-      } else if (roleData?.role !== "vendor") {
-        toast.error("Access denied. Vendor role required.");
-        navigate("/dashboard");
-        setLoading(false);
-        return;
       }
 
       // get vendor profile
@@ -223,6 +223,16 @@ const VendorDashboard = () => {
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
+            <Button
+              onClick={() => navigate('/dashboard')}
+              variant="outline"
+              size="sm"
+              className="hidden sm:flex"
+              title="Switch to User Dashboard"
+            >
+              <Users className="h-4 w-4 mr-2" />
+              User View
+            </Button>
             <NotificationBell />
             <Button
               onClick={() => subscribed ? unsubscribeFromPushNotifications() : subscribeToPushNotifications()}

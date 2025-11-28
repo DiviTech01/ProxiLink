@@ -6,6 +6,7 @@ import demoVendors from '@/data/demoVendors';
 import { AlertCircle, Loader2, MapPin } from 'lucide-react';
 import { Alert, AlertDescription } from './ui/alert';
 import { Button } from './ui/button';
+import RadiusSlider from './RadiusSlider';
 import { MapContainer, TileLayer, Marker, Popup, CircleMarker } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -168,12 +169,13 @@ const SimpleMap = ({ location, vendors }: { location: { lat: number; lng: number
   );
 };
 
-const Map = ({ userLocation, radiusKm = 5 }: MapProps) => {
+const Map = ({ userLocation, radiusKm = 0.01 }: MapProps) => {
   const { location, loading, error, requestLocation } = useGeolocation();
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [nearbyVendors, setNearbyVendors] = useState<Vendor[]>([]);
   const [mapLoading, setMapLoading] = useState(false);
   const [useLeaflet, setUseLeaflet] = useState<boolean>(typeof navigator !== 'undefined' ? navigator.onLine ?? true : true);
+  const [currentRadius, setCurrentRadius] = useState(radiusKm);
 
   // Map component initialized - using backend API for all Google Maps calls
 
@@ -253,7 +255,7 @@ const Map = ({ userLocation, radiusKm = 5 }: MapProps) => {
         const result = await findNearbyVendorsBackend(
           { lat: mapLocation.lat, lng: mapLocation.lng },
           vendors,
-          radiusKm
+          currentRadius
         );
 
         if (result) {
@@ -270,7 +272,7 @@ const Map = ({ userLocation, radiusKm = 5 }: MapProps) => {
     };
 
     fetchNearbyVendors();
-  }, [mapLocation, vendors, radiusKm]);
+  }, [mapLocation, vendors, currentRadius]);
 
   // Show error state
   if (error) {
@@ -547,6 +549,11 @@ const Map = ({ userLocation, radiusKm = 5 }: MapProps) => {
           <MapPin className="h-4 w-4 mr-1" />
           Center Map
         </Button>
+      </div>
+
+      {/* Radius Slider - top-right */}
+      <div className="absolute top-4 right-4 z-[1000] w-64">
+        <RadiusSlider value={currentRadius} onChange={setCurrentRadius} />
       </div>
 
       {/* Loading indicator when fetching vendors */}

@@ -5,8 +5,10 @@ import { useGeolocation } from '@/hooks/useGeolocation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MapPin, DollarSign } from 'lucide-react';
+import { MapPin, DollarSign, Search } from 'lucide-react';
+import RadiusSlider from '@/components/RadiusSlider';
 
 const ServiceList = () => {
   const navigate = useNavigate();
@@ -14,8 +16,10 @@ const ServiceList = () => {
   type ServiceItem = { id?: string; title?: string; description?: string; category?: string; price?: number; location_lat?: number; location_lng?: number; vendor?: Record<string, unknown>; vendor_profiles?: Record<string, unknown> };
   const [services, setServices] = useState<ServiceItem[]>([]);
   const [allServices, setAllServices] = useState<ServiceItem[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
-  const [proximityFilter, setProximityFilter] = useState('10'); // Default to 10km
+  const [radiusKm, setRadiusKm] = useState(0.01); // Default to 10 meters
+  const [proximityFilter, setProximityFilter] = useState('10'); // Kept for backward compatibility
   const [categories, setCategories] = useState<string[]>([]);
 
   useEffect(() => {
@@ -40,14 +44,23 @@ const ServiceList = () => {
   useEffect(() => {
     let filtered = allServices;
 
+    // Search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter((s) => 
+        s.title?.toLowerCase().includes(query) || 
+        s.description?.toLowerCase().includes(query) ||
+        s.category?.toLowerCase().includes(query)
+      );
+    }
+
     // Category filter
     if (categoryFilter) {
       filtered = filtered.filter((s) => s.category === categoryFilter);
     }
 
     // Proximity filter (if location available)
-    if (location && parseInt(proximityFilter) > 0) {
-      const radiusKm = parseInt(proximityFilter);
+    if (location && radiusKm > 0) {
       filtered = filtered.filter((s) => {
         if (!s.location_lat || !s.location_lng) return false;
         
@@ -66,7 +79,7 @@ const ServiceList = () => {
     }
 
     setServices(filtered);
-  }, [categoryFilter, proximityFilter, location, allServices]);
+  }, [searchQuery, categoryFilter, radiusKm, location, allServices]);
 
   const handleCenterMap = (service: { location_lat?: number; location_lng?: number }) => {
     // dispatch event to pan map to service location
@@ -81,7 +94,21 @@ const ServiceList = () => {
           <h1 className="text-lg sm:text-2xl font-bold mb-3 sm:mb-4">Available Services</h1>
 
           {/* Filters */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 sm:gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="search-filter" className="text-sm sm:text-base">Search</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="search-filter"
+                  placeholder="Search services..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 min-h-[44px] text-sm sm:text-base"
+                />
+              </div>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="category-filter" className="text-sm sm:text-base">Category</Label>
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
@@ -119,7 +146,9 @@ const ServiceList = () => {
               <Button
                 variant="outline"
                 onClick={() => {
+                  setSearchQuery('');
                   setCategoryFilter('');
+                  setRadiusKm(0.01);
                   setProximityFilter('10');
                 }}
                 className="w-full md:w-auto min-h-[44px] text-sm sm:text-base"
@@ -131,10 +160,15 @@ const ServiceList = () => {
         </div>
       </div>
 
+      {/* Radius Slider - Fixed position */}
+      <div className="fixed bottom-6 right-6 z-30 w-72">
+        <RadiusSlider value={radiusKm} onChange={setRadiusKm} />
+      </div>
+
       <div className="container mx-auto px-4 py-8">
         <p className="text-sm text-muted-foreground mb-6">
           Showing {services.length} service{services.length !== 1 ? 's' : ''}
-          {location && <span> within {proximityFilter}km of your location</span>}
+          {location && <span> within {radiusKm < 1 ? `${Math.round(radiusKm * 1000)}m` : `${radiusKm.toFixed(1)}km`} of your location</span>}
         </p>
 
         {services.length === 0 ? (
