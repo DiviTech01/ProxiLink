@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ArrowLeft, Send, MessageSquare } from 'lucide-react';
 import { toast } from 'sonner';
+import { generateDemoConversations, generateDemoMessages } from '@/data/demoMessages';
 
 interface Conversation {
   id: string;
@@ -140,6 +141,16 @@ const Messages = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      const useDemoMessages = import.meta.env.VITE_USE_DEMO_VENDORS === 'true';
+
+      if (useDemoMessages) {
+        // Use demo conversations
+        const demoConvs = generateDemoConversations(user.id);
+        setConversations(demoConvs as unknown as Conversation[]);
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('conversations')
         .select(`
@@ -180,6 +191,16 @@ const Messages = () => {
 
   const fetchMessages = async (conversationId: string) => {
     try {
+      const useDemoMessages = import.meta.env.VITE_USE_DEMO_VENDORS === 'true';
+
+      if (useDemoMessages) {
+        // Use demo messages
+        const { data: { user } } = await supabase.auth.getUser();
+        const demoMsgs = generateDemoMessages(conversationId, user?.id || 'demo-user');
+        setMessages(demoMsgs as unknown as Message[]);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('messages')
         .select('*')

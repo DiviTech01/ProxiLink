@@ -1,5 +1,4 @@
 // Demo conversations and messages for offline/demo mode
-import demoVendors from './demoVendors';
 
 export interface DemoConversation {
   id: string;
@@ -18,15 +17,20 @@ export interface DemoMessage {
   created_at: string;
 }
 
+const staticVendors = [
+  { id: 'dv-1', name: 'Nairobi Fresh Foods' },
+  { id: 'dv-2', name: 'Mombasa Seafood Grill' },
+  { id: 'dv-3', name: 'Kigali Health Clinic' },
+];
+
 export function generateDemoConversations(currentUserId: string) {
-  const vendors = demoVendors.slice(0, 3);
   const now = Date.now();
-  return vendors.map((v, i) => ({
+  return staticVendors.map((v, i) => ({
     id: `demo-conv-${i + 1}`,
     user_id: currentUserId || 'demo-user',
     vendor_id: v.id,
     last_message_at: new Date(now - i * 60000).toISOString(),
-    other_user: { id: v.id, full_name: v.profiles?.full_name, phone: 'N/A' },
+    other_user: { id: v.id, full_name: v.name, phone: 'N/A' },
   }));
 }
 
