@@ -17,24 +17,18 @@ const RadiusSlider = ({ value, onChange, className = '' }: RadiusSliderProps) =>
     return `${val.toFixed(1)}km`;
   };
 
-  // Handle slider change (logarithmic scale for better UX)
+  // Handle slider change (linear scale for 1-5km range)
   const handleChange = (values: number[]) => {
     const sliderValue = values[0];
-    // Map 0-100 slider to 0.01-5 km range
-    // Use exponential scale for better control at small values
-    const minLog = Math.log(0.01);
-    const maxLog = Math.log(5);
-    const scale = (maxLog - minLog) / 100;
-    const actualValue = Math.exp(minLog + scale * sliderValue);
-    onChange(Number(actualValue.toFixed(3)));
+    // Map 0-100 slider to 1-5 km range (linear)
+    const actualValue = 1 + (sliderValue / 100) * 4;
+    onChange(Number(actualValue.toFixed(2)));
   };
 
   // Get slider position from actual value
   const getSliderValue = (val: number) => {
-    const minLog = Math.log(0.01);
-    const maxLog = Math.log(5);
-    const scale = (maxLog - minLog) / 100;
-    return ((Math.log(val) - minLog) / scale);
+    // Map 1-5km to 0-100 slider position
+    return ((val - 1) / 4) * 100;
   };
 
   return (
@@ -47,7 +41,7 @@ const RadiusSlider = ({ value, onChange, className = '' }: RadiusSliderProps) =>
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <span className="text-2xl font-bold text-primary">{getDisplayValue(value)}</span>
-          <span className="text-xs text-muted-foreground">10m - 5km</span>
+          <span className="text-xs text-muted-foreground">1km - 5km</span>
         </div>
         
         <Slider
@@ -60,9 +54,10 @@ const RadiusSlider = ({ value, onChange, className = '' }: RadiusSliderProps) =>
         />
         
         <div className="flex justify-between text-xs text-muted-foreground">
-          <span>10m</span>
-          <span>100m</span>
           <span>1km</span>
+          <span>2km</span>
+          <span>3km</span>
+          <span>4km</span>
           <span>5km</span>
         </div>
       </div>

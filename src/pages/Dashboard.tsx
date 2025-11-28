@@ -27,7 +27,7 @@ const Dashboard = () => {
   const [showProximityAlert, setShowProximityAlert] = useState(false);
   const [nearbyProvider, setNearbyProvider] = useState<ServiceItem | null>(null);
   const [shouldExpandProviders, setShouldExpandProviders] = useState(false);
-  const [radiusKm, setRadiusKm] = useState(0.01); // Default 10 meters
+  const [radiusKm, setRadiusKm] = useState(1); // Default 1km
 
   const fetchUserData = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -109,12 +109,11 @@ const Dashboard = () => {
       .from("services")
       .select(`
         *,
-        profiles(full_name),
-        vendor_profiles(business_name)
+        profiles(full_name, location_lat, location_lng),
+        vendor_profiles(business_name, location_lat, location_lng)
       `)
       .eq("status", "active")
-      .order("created_at", { ascending: false })
-      .limit(10);
+      .order("created_at", { ascending: false });
 
     setServices(data || []);
   }, []);
@@ -147,7 +146,7 @@ const Dashboard = () => {
       </div>
 
       {/* Radius Slider - Top Right */}
-      <div className="fixed top-20 right-4 z-40 w-56">
+      <div className="fixed top-20 right-4 z-40 w-48">
         <RadiusSlider value={radiusKm} onChange={setRadiusKm} />
       </div>
 
@@ -182,7 +181,9 @@ const Dashboard = () => {
 
       {/* Service Provider List - Bottom Sheet */}
       <ServiceProviderList 
-        services={services} 
+        services={services}
+        userLocation={location}
+        radiusKm={radiusKm}
         initialExpanded={shouldExpandProviders}
         onExpandChange={() => setShouldExpandProviders(false)}
       />
